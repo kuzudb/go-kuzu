@@ -18,3 +18,7 @@ func (queryResult QueryResult) ToString() string {
 	C.free(unsafe.Pointer(cstring))
 	return str
 }
+
+func (queryResult QueryResult) Close() {
+	C.kuzu_query_result_destroy(&queryResult.CQueryResult)
+}
