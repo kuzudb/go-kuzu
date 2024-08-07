@@ -57,6 +57,39 @@ func (conn Connection) Query(query string) (QueryResult, error) {
 	return queryResult, nil
 }
 
+func (conn Connection) Execute(preparedStatement PreparedStatement, args map[string]any) (QueryResult, error) {
+	for key, value := range args {
+		err := conn.bindParameter(preparedStatement, key, value)
+		if err != nil {
+			return QueryResult{}, err
+		}
+	}
+	queryResult := QueryResult{}
+	status := C.kuzu_connection_execute(&conn.CConnection, &preparedStatement.CPreparedStatement, &queryResult.CQueryResult)
+	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
+		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
+		defer C.free(unsafe.Pointer(cErrMsg))
+		return queryResult, fmt.Errorf(C.GoString(cErrMsg))
+	}
+	return queryResult, nil
+}
+
+func (conn Connection) bindParameter(preparedStatement PreparedStatement, key string, value any) error {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+	switch v := value.(type) {
+	case string:
+		cValue := C.CString(v)
+		defer C.free(unsafe.Pointer(cValue))
+		C.kuzu_prepared_statement_bind_string(&preparedStatement.CPreparedStatement, cKey, cValue)
+	case int64:
+		C.kuzu_prepared_statement_bind_int64(&preparedStatement.CPreparedStatement, cKey, C.int64_t(v))
+	default:
+		return fmt.Errorf("unsupported type")
+	}
+	return nil
+}
+
 func (conn Connection) Prepare(query string) (PreparedStatement, error) {
 	cquery := C.CString(query)
 	defer C.free(unsafe.Pointer(cquery))
