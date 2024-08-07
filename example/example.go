@@ -41,6 +41,7 @@ func main() {
 			fmt.Println(err)
 			continue
 		}
+		defer queryResult.Close()
 		queryResultStr := queryResult.ToString()
 		fmt.Println(queryResultStr)
 	}

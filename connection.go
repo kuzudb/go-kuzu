@@ -31,7 +31,7 @@ func (conn Connection) Query(query string) (QueryResult, error) {
 	defer C.free(unsafe.Pointer(cquery))
 	queryResult := QueryResult{}
 	status := C.kuzu_connection_query(&conn.CConnection, cquery, &queryResult.CQueryResult)
-	if status != C.KuzuSuccess {
+	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
 		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
 		defer C.free(unsafe.Pointer(cErrMsg))
 		return queryResult, fmt.Errorf(C.GoString(cErrMsg))
