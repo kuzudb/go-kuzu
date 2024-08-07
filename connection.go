@@ -6,6 +6,7 @@ import "C"
 
 import (
 	"fmt"
+	"time"
 	"unsafe"
 )
 
@@ -108,6 +109,12 @@ func (conn Connection) bindParameter(preparedStatement PreparedStatement, key st
 		C.kuzu_prepared_statement_bind_double(&preparedStatement.CPreparedStatement, cKey, C.double(v))
 	case float32:
 		C.kuzu_prepared_statement_bind_float(&preparedStatement.CPreparedStatement, cKey, C.float(v))
+	case time.Time:
+		if timeHasNanoseconds(v) {
+			C.kuzu_prepared_statement_bind_timestamp_ns(&preparedStatement.CPreparedStatement, cKey, timeToKuzuTimestampNs(v))
+		} else {
+			C.kuzu_prepared_statement_bind_timestamp(&preparedStatement.CPreparedStatement, cKey, timeToKuzuTimestamp(v))
+		}
 	default:
 		return fmt.Errorf("unsupported type")
 	}
