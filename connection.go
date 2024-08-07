@@ -26,6 +26,24 @@ func (conn Connection) Close() {
 	C.kuzu_connection_destroy(&conn.CConnection)
 }
 
+func (conn Connection) GetMaxNumThreads() uint64 {
+	numThreads := C.uint64_t(0)
+	C.kuzu_connection_get_max_num_thread_for_exec(&conn.CConnection, &numThreads)
+	return uint64(numThreads)
+}
+
+func (conn Connection) SetMaxNumThreads(numThreads uint64) {
+	C.kuzu_connection_set_max_num_thread_for_exec(&conn.CConnection, C.uint64_t(numThreads))
+}
+
+func (conn Connection) Interrupt() {
+	C.kuzu_connection_interrupt(&conn.CConnection)
+}
+
+func (conn Connection) SetTimeout(timeout uint64) {
+	C.kuzu_connection_set_query_timeout(&conn.CConnection, C.uint64_t(timeout))
+}
+
 func (conn Connection) Query(query string) (QueryResult, error) {
 	cquery := C.CString(query)
 	defer C.free(unsafe.Pointer(cquery))
