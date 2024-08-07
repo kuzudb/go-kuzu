@@ -45,13 +45,13 @@ func (conn Connection) SetTimeout(timeout uint64) {
 }
 
 func (conn Connection) Query(query string) (QueryResult, error) {
-	cquery := C.CString(query)
-	defer C.free(unsafe.Pointer(cquery))
+	cQuery := C.CString(query)
+	defer C.free(unsafe.Pointer(cQuery))
 	queryResult := QueryResult{}
-	status := C.kuzu_connection_query(&conn.CConnection, cquery, &queryResult.CQueryResult)
+	status := C.kuzu_connection_query(&conn.CConnection, cQuery, &queryResult.CQueryResult)
 	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
 		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
-		defer C.free(unsafe.Pointer(cErrMsg))
+		defer C.kuzu_destroy_string(cErrMsg)
 		return queryResult, fmt.Errorf(C.GoString(cErrMsg))
 	}
 	return queryResult, nil
@@ -68,7 +68,7 @@ func (conn Connection) Execute(preparedStatement PreparedStatement, args map[str
 	status := C.kuzu_connection_execute(&conn.CConnection, &preparedStatement.CPreparedStatement, &queryResult.CQueryResult)
 	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
 		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
-		defer C.free(unsafe.Pointer(cErrMsg))
+		defer C.kuzu_destroy_string(cErrMsg)
 		return queryResult, fmt.Errorf(C.GoString(cErrMsg))
 	}
 	return queryResult, nil
@@ -91,13 +91,13 @@ func (conn Connection) bindParameter(preparedStatement PreparedStatement, key st
 }
 
 func (conn Connection) Prepare(query string) (PreparedStatement, error) {
-	cquery := C.CString(query)
-	defer C.free(unsafe.Pointer(cquery))
+	cQuery := C.CString(query)
+	defer C.free(unsafe.Pointer(cQuery))
 	preparedStatement := PreparedStatement{}
-	status := C.kuzu_connection_prepare(&conn.CConnection, cquery, &preparedStatement.CPreparedStatement)
+	status := C.kuzu_connection_prepare(&conn.CConnection, cQuery, &preparedStatement.CPreparedStatement)
 	if status != C.KuzuSuccess || !C.kuzu_prepared_statement_is_success(&preparedStatement.CPreparedStatement) {
 		cErrMsg := C.kuzu_prepared_statement_get_error_message(&preparedStatement.CPreparedStatement)
-		defer C.free(unsafe.Pointer(cErrMsg))
+		defer C.kuzu_destroy_string(cErrMsg)
 		return preparedStatement, fmt.Errorf(C.GoString(cErrMsg))
 	}
 	return preparedStatement, nil
