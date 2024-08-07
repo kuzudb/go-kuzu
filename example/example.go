@@ -45,4 +45,18 @@ func main() {
 		queryResultStr := queryResult.ToString()
 		fmt.Println(queryResultStr)
 	}
+
+	preparedStatement, err := conn.Prepare("MATCH (a:User)-[e:Follows]->(b:User) WHERE a.name = $1 RETURN a.name, e.since, b.name")
+	if err != nil {
+		fmt.Println("Prepare error:", err, preparedStatement)
+	}
+	defer preparedStatement.Close()
+	fmt.Println("Prepared statement created", preparedStatement)
+
+	preparedStatement, err = conn.Prepare("MATCH (a:User)-[e:Follows]->(b:User) WHERE a.name = $1")
+	if err != nil {
+		fmt.Println("Prepare error:", err, preparedStatement)
+	}
+	defer preparedStatement.Close()
+	fmt.Println("Prepared statement created", preparedStatement.CPreparedStatement)
 }
