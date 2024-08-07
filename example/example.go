@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/kuzudb/go-kuzu"
 )
 
 func main() {
+	d := time.Now()
+	fmt.Println(int(d.Month()), int(d.Day()), int(d.Year()))
 	dbPath := "example_db"
 	os.RemoveAll(dbPath)
 	systemConfig := kuzu.DefaultSystemConfig()
