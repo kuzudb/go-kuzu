@@ -35,7 +35,6 @@ func main() {
 		"COPY Follows FROM \"follows.csv\"",
 		"COPY LivesIn FROM \"lives-in.csv\"",
 		"MATCH (a:User)-[e:Follows]->(b:User) RETURN a.name, e.since, b.name",
-		"MATCH p",
 	}
 	for _, query := range queries {
 		fmt.Println("Query:", query)
@@ -54,12 +53,13 @@ func main() {
 		fmt.Println("Prepare error:", err, preparedStatement)
 	}
 	defer preparedStatement.Close()
-	fmt.Println("Prepared statement created", preparedStatement)
-
-	preparedStatement, err = conn.Prepare("MATCH (a:User)-[e:Follows]->(b:User) WHERE a.name = $1")
-	if err != nil {
-		fmt.Println("Prepare error:", err, preparedStatement)
+	args := map[string]interface{}{
+		"1": "Adam",
 	}
-	defer preparedStatement.Close()
-	fmt.Println("Prepared statement created", preparedStatement.CPreparedStatement)
+	queryResult, err := conn.Execute(preparedStatement, args)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer queryResult.Close()
+	fmt.Println(queryResult.ToString())
 }
