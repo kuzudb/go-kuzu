@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kuzudb/go-kuzu"
 )
 
 func main() {
+	dbPath := "example_db"
+	os.RemoveAll(dbPath)
 	systemConfig := kuzu.DefaultSystemConfig()
 	systemConfig.BufferPoolSize = 1024 * 1024 * 1024
-	db := kuzu.OpenDatabase("example_db", systemConfig)
+	db := kuzu.OpenDatabase(dbPath, systemConfig)
 	conn := kuzu.OpenConnection(db)
 	queries := []string{
 		"CREATE NODE TABLE User(name STRING, age INT64, PRIMARY KEY (name))",
