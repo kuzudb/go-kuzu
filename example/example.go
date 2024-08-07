@@ -22,6 +22,9 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
+	fmt.Println("MaxNumThreads:", conn.GetMaxNumThreads())
+	conn.SetMaxNumThreads(4)
+	fmt.Println("MaxNumThreads:", conn.GetMaxNumThreads())
 	queries := []string{
 		"CREATE NODE TABLE User(name STRING, age INT64, PRIMARY KEY (name))",
 		"CREATE NODE TABLE City(name STRING, population INT64, PRIMARY KEY (name))",
