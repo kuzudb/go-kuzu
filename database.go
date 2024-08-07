@@ -41,14 +41,18 @@ type Database struct {
 	CDatabase C.kuzu_database
 }
 
-func OpenDatabase(path string, systemConfig SystemConfig) Database {
+func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 	db := Database{}
 	cPath := C.CString(path)
 	defer C.free(unsafe.Pointer(cPath))
 	cSystemConfig := systemConfig.toC()
 	status := C.kuzu_database_init(cPath, cSystemConfig, &db.CDatabase)
-	if status != 0 {
-		panic(fmt.Sprintf("Failed to open database: %s", path))
+	if status != C.KuzuSuccess {
+		return db, fmt.Errorf("failed to open database with status %d", status)
 	}
-	return db
+	return db, nil
+}
+
+func (db Database) Close() {
+	C.kuzu_database_destroy(&db.CDatabase)
 }
