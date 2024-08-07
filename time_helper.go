@@ -44,3 +44,11 @@ func timeToKuzuTimestampNs(inputTime time.Time) C.kuzu_timestamp_ns_t {
 func timeHasNanoseconds(inputTime time.Time) bool {
 	return inputTime.Nanosecond() != 0
 }
+
+func durationToKuzuInterval(inputDuration time.Duration) C.kuzu_interval_t {
+	microseconds := inputDuration.Microseconds()
+
+	cKuzuInterval := C.kuzu_interval_t{}
+	cKuzuInterval.micros = C.int64_t(microseconds)
+	return cKuzuInterval
+}

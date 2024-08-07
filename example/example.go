@@ -66,13 +66,16 @@ func main() {
 	defer queryResult.Close()
 	fmt.Println(queryResult.ToString())
 
-	preparedStatement, err = conn.Prepare("RETURN dayname($1)")
+	preparedStatement, err = conn.Prepare("RETURN $1")
 	if err != nil {
 		fmt.Println("Prepare error:", err, preparedStatement)
 	}
 	defer preparedStatement.Close()
+	dateDiff := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC).Sub(time.Date(2001, time.January, 1, 0, 0, 0, 0, time.UTC))
+	fmt.Println("dateDiff:", dateDiff)
+
 	args = map[string]interface{}{
-		"1": time.Now(),
+		"1": dateDiff,
 	}
 	queryResult, err = conn.Execute(preparedStatement, args)
 	if err != nil {

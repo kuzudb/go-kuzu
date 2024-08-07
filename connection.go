@@ -115,6 +115,8 @@ func (conn Connection) bindParameter(preparedStatement PreparedStatement, key st
 		} else {
 			C.kuzu_prepared_statement_bind_timestamp(&preparedStatement.CPreparedStatement, cKey, timeToKuzuTimestamp(v))
 		}
+	case time.Duration:
+		C.kuzu_prepared_statement_bind_interval(&preparedStatement.CPreparedStatement, cKey, durationToKuzuInterval(v))
 	default:
 		return fmt.Errorf("unsupported type")
 	}
