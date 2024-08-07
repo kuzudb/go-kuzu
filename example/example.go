@@ -65,4 +65,19 @@ func main() {
 	}
 	defer queryResult.Close()
 	fmt.Println(queryResult.ToString())
+
+	preparedStatement, err = conn.Prepare("RETURN dayname($1)")
+	if err != nil {
+		fmt.Println("Prepare error:", err, preparedStatement)
+	}
+	defer preparedStatement.Close()
+	args = map[string]interface{}{
+		"1": time.Now(),
+	}
+	queryResult, err = conn.Execute(preparedStatement, args)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer queryResult.Close()
+	fmt.Println(queryResult.ToString())
 }
