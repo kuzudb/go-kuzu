@@ -17,7 +17,11 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-	conn := kuzu.OpenConnection(db)
+	conn, err := kuzu.OpenConnection(db)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
 	queries := []string{
 		"CREATE NODE TABLE User(name STRING, age INT64, PRIMARY KEY (name))",
 		"CREATE NODE TABLE City(name STRING, population INT64, PRIMARY KEY (name))",
@@ -28,9 +32,15 @@ func main() {
 		"COPY Follows FROM \"follows.csv\"",
 		"COPY LivesIn FROM \"lives-in.csv\"",
 		"MATCH (a:User)-[e:Follows]->(b:User) RETURN a.name, e.since, b.name",
+		"MATCH p",
 	}
 	for _, query := range queries {
-		queryResult := conn.Query(query)
+		fmt.Println("Query:", query)
+		queryResult, err := conn.Query(query)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 		queryResultStr := queryResult.ToString()
 		fmt.Println(queryResultStr)
 	}
