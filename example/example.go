@@ -12,7 +12,11 @@ func main() {
 	os.RemoveAll(dbPath)
 	systemConfig := kuzu.DefaultSystemConfig()
 	systemConfig.BufferPoolSize = 1024 * 1024 * 1024
-	db := kuzu.OpenDatabase(dbPath, systemConfig)
+	db, err := kuzu.OpenDatabase(dbPath, systemConfig)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
 	conn := kuzu.OpenConnection(db)
 	queries := []string{
 		"CREATE NODE TABLE User(name STRING, age INT64, PRIMARY KEY (name))",
