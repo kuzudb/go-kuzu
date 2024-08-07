@@ -48,6 +48,8 @@ func main() {
 		}
 		defer queryResult.Close()
 		queryResultStr := queryResult.ToString()
+		fmt.Println("Num rows:", queryResult.GetNumberOfRows())
+		fmt.Println("Time:", queryResult.GetCompilingTime(), queryResult.GetExecutionTime())
 		fmt.Println(queryResultStr)
 	}
 
