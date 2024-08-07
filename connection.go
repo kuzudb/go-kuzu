@@ -82,8 +82,32 @@ func (conn Connection) bindParameter(preparedStatement PreparedStatement, key st
 		cValue := C.CString(v)
 		defer C.free(unsafe.Pointer(cValue))
 		C.kuzu_prepared_statement_bind_string(&preparedStatement.CPreparedStatement, cKey, cValue)
+	case bool:
+		C.kuzu_prepared_statement_bind_bool(&preparedStatement.CPreparedStatement, cKey, C.bool(v))
+	case int:
+		C.kuzu_prepared_statement_bind_int64(&preparedStatement.CPreparedStatement, cKey, C.int64_t(v))
 	case int64:
 		C.kuzu_prepared_statement_bind_int64(&preparedStatement.CPreparedStatement, cKey, C.int64_t(v))
+	case int32:
+		C.kuzu_prepared_statement_bind_int32(&preparedStatement.CPreparedStatement, cKey, C.int32_t(v))
+	case int16:
+		C.kuzu_prepared_statement_bind_int16(&preparedStatement.CPreparedStatement, cKey, C.int16_t(v))
+	case int8:
+		C.kuzu_prepared_statement_bind_int8(&preparedStatement.CPreparedStatement, cKey, C.int8_t(v))
+	case uint:
+		C.kuzu_prepared_statement_bind_uint64(&preparedStatement.CPreparedStatement, cKey, C.uint64_t(v))
+	case uint64:
+		C.kuzu_prepared_statement_bind_uint64(&preparedStatement.CPreparedStatement, cKey, C.uint64_t(v))
+	case uint32:
+		C.kuzu_prepared_statement_bind_uint32(&preparedStatement.CPreparedStatement, cKey, C.uint32_t(v))
+	case uint16:
+		C.kuzu_prepared_statement_bind_uint16(&preparedStatement.CPreparedStatement, cKey, C.uint16_t(v))
+	case uint8:
+		C.kuzu_prepared_statement_bind_uint8(&preparedStatement.CPreparedStatement, cKey, C.uint8_t(v))
+	case float64:
+		C.kuzu_prepared_statement_bind_double(&preparedStatement.CPreparedStatement, cKey, C.double(v))
+	case float32:
+		C.kuzu_prepared_statement_bind_float(&preparedStatement.CPreparedStatement, cKey, C.float(v))
 	default:
 		return fmt.Errorf("unsupported type")
 	}
