@@ -38,3 +38,16 @@ func (conn Connection) Query(query string) (QueryResult, error) {
 	}
 	return queryResult, nil
 }
+
+func (conn Connection) Prepare(query string) (PreparedStatement, error) {
+	cquery := C.CString(query)
+	defer C.free(unsafe.Pointer(cquery))
+	preparedStatement := PreparedStatement{}
+	status := C.kuzu_connection_prepare(&conn.CConnection, cquery, &preparedStatement.CPreparedStatement)
+	if status != C.KuzuSuccess || !C.kuzu_prepared_statement_is_success(&preparedStatement.CPreparedStatement) {
+		cErrMsg := C.kuzu_prepared_statement_get_error_message(&preparedStatement.CPreparedStatement)
+		defer C.free(unsafe.Pointer(cErrMsg))
+		return preparedStatement, fmt.Errorf(C.GoString(cErrMsg))
+	}
+	return preparedStatement, nil
+}
