@@ -5,6 +5,7 @@ package kuzu
 import "C"
 import (
 	"fmt"
+	"runtime"
 	"unsafe"
 )
 
@@ -39,10 +40,14 @@ func (config SystemConfig) toC() C.kuzu_system_config {
 
 type Database struct {
 	CDatabase C.kuzu_database
+	isClosed  bool
 }
 
 func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 	db := Database{}
+	runtime.SetFinalizer(&db, func(db *Database) {
+		db.Close()
+	})
 	cPath := C.CString(path)
 	defer C.free(unsafe.Pointer(cPath))
 	cSystemConfig := systemConfig.toC()
@@ -54,5 +59,9 @@ func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 }
 
 func (db Database) Close() {
+	if db.isClosed {
+		return
+	}
 	C.kuzu_database_destroy(&db.CDatabase)
+	db.isClosed = true
 }
