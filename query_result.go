@@ -10,6 +10,7 @@ import (
 
 type QueryResult struct {
 	CQueryResult C.kuzu_query_result
+	isClosed     bool
 }
 
 func (queryResult QueryResult) ToString() string {
@@ -20,7 +21,11 @@ func (queryResult QueryResult) ToString() string {
 }
 
 func (queryResult QueryResult) Close() {
+	if queryResult.isClosed {
+		return
+	}
 	C.kuzu_query_result_destroy(&queryResult.CQueryResult)
+	queryResult.isClosed = true
 }
 
 func (queryResult QueryResult) ResetIterator() {

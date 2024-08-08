@@ -6,16 +6,21 @@ import "C"
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 	"unsafe"
 )
 
 type Connection struct {
 	CConnection C.kuzu_connection
+	isClosed    bool
 }
 
 func OpenConnection(database Database) (Connection, error) {
 	conn := Connection{}
+	runtime.SetFinalizer(&conn, func(conn *Connection) {
+		conn.Close()
+	})
 	status := C.kuzu_connection_init(&database.CDatabase, &conn.CConnection)
 	if status != C.KuzuSuccess {
 		return conn, fmt.Errorf("failed to open connection with status %d", status)
@@ -24,7 +29,11 @@ func OpenConnection(database Database) (Connection, error) {
 }
 
 func (conn Connection) Close() {
+	if conn.isClosed {
+		return
+	}
 	C.kuzu_connection_destroy(&conn.CConnection)
+	conn.isClosed = true
 }
 
 func (conn Connection) GetMaxNumThreads() uint64 {
@@ -127,6 +136,9 @@ func (conn Connection) Prepare(query string) (PreparedStatement, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
 	preparedStatement := PreparedStatement{}
+	runtime.SetFinalizer(&preparedStatement, func(preparedStatement *PreparedStatement) {
+		preparedStatement.Close()
+	})
 	status := C.kuzu_connection_prepare(&conn.CConnection, cQuery, &preparedStatement.CPreparedStatement)
 	if status != C.KuzuSuccess || !C.kuzu_prepared_statement_is_success(&preparedStatement.CPreparedStatement) {
 		cErrMsg := C.kuzu_prepared_statement_get_error_message(&preparedStatement.CPreparedStatement)
