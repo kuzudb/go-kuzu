@@ -58,6 +58,9 @@ func (conn Connection) Query(query string) (QueryResult, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
 	queryResult := QueryResult{}
+	runtime.SetFinalizer(&queryResult, func(queryResult *QueryResult) {
+		queryResult.Close()
+	})
 	status := C.kuzu_connection_query(&conn.CConnection, cQuery, &queryResult.CQueryResult)
 	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
 		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
@@ -75,6 +78,9 @@ func (conn Connection) Execute(preparedStatement PreparedStatement, args map[str
 		}
 	}
 	queryResult := QueryResult{}
+	runtime.SetFinalizer(&queryResult, func(queryResult *QueryResult) {
+		queryResult.Close()
+	})
 	status := C.kuzu_connection_execute(&conn.CConnection, &preparedStatement.CPreparedStatement, &queryResult.CQueryResult)
 	if status != C.KuzuSuccess || !C.kuzu_query_result_is_success(&queryResult.CQueryResult) {
 		cErrMsg := C.kuzu_query_result_get_error_message(&queryResult.CQueryResult)
