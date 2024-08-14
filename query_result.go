@@ -51,6 +51,10 @@ func (queryResult QueryResult) GetColumnNames() []string {
 	return columns
 }
 
+func (queryResult QueryResult) GetNumberOfColumns() uint64 {
+	return uint64(C.kuzu_query_result_get_num_columns(&queryResult.CQueryResult))
+}
+
 func (queryResult QueryResult) GetNumberOfRows() uint64 {
 	if queryResult.columnNames != nil {
 		return uint64(len(queryResult.columnNames))
