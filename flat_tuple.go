@@ -22,3 +22,8 @@ func (tuple FlatTuple) GetAsString() string {
 	defer C.kuzu_destroy_string(cString)
 	return C.GoString(cString)
 }
+
+func (tuple FlatTuple) GetValue(index uint64) (any, error) {
+	var cValue C.kuzu_value
+	return kuzuValueToGoValue(cValue)
+}
