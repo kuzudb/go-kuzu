@@ -47,10 +47,18 @@ func main() {
 			continue
 		}
 		defer queryResult.Close()
-		queryResultStr := queryResult.ToString()
+		for queryResult.HasNext() {
+			tuple, err := queryResult.Next()
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+			fmt.Println(tuple.GetAsString())
+			defer tuple.Close()
+			fmt.Println(tuple.GetAsString())
+		}
 		fmt.Println("Num rows:", queryResult.GetNumberOfRows())
 		fmt.Println("Time:", queryResult.GetCompilingTime(), queryResult.GetExecutionTime())
-		fmt.Println(queryResultStr)
 	}
 
 	preparedStatement, err := conn.Prepare("MATCH (a:User)-[e:Follows]->(b:User) WHERE a.name = $1 RETURN a.name, e.since, b.name")
