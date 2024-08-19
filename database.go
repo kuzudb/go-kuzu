@@ -40,7 +40,7 @@ func (config SystemConfig) toC() C.kuzu_system_config {
 
 type Database struct {
 	CDatabase C.kuzu_database
-	isClosed  bool
+	IsClosed  bool
 }
 
 func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
@@ -59,9 +59,9 @@ func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 }
 
 func (db Database) Close() {
-	if db.isClosed {
+	if db.IsClosed {
 		return
 	}
 	C.kuzu_database_destroy(&db.CDatabase)
-	db.isClosed = true
+	db.IsClosed = true
 }
