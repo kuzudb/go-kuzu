@@ -26,5 +26,5 @@ func TestCloseDatabase(t *testing.T) {
 	db, _ := OpenDatabase(tempDir, DefaultSystemConfig())
 	db.Close()
 
-	assert.Equal(t, db.isClosed, false, "Expected databse to be closed")
+	assert.False(t, db.isClosed, "Expected databse to be closed")
 }
