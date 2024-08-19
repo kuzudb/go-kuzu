@@ -18,3 +18,13 @@ func TestOpenDatabase(t *testing.T) {
 	assert.False(t, db.isClosed, "Expected database to be open")
 	assert.DirExists(t, tempDir, "Expected temporary directory to be open")
 } 
+
+func TestCloseDatabase(t *testing.T) {
+	tempDir, _ := os.MkdirTemp("", "testDb")
+	defer os.RemoveAll((tempDir))
+
+	db, _ := OpenDatabase(tempDir, DefaultSystemConfig())
+	db.Close()
+
+	assert.Equal(t, db.isClosed, false, "Expected databse to be closed")
+}
