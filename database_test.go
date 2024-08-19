@@ -2,20 +2,19 @@ package kuzu
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOpenDatabase(t *testing.T) {
-	dbDir := os.TempDir()
-	tempDir, _ := os.MkdirTemp("", "testDb")
-	dbPath  := filepath.Join(dbDir, tempDir)
+	tempDir, dirErr := os.MkdirTemp("", "testDb")
 	defer os.RemoveAll(tempDir) 
 
-	db, err := OpenDatabase(dbPath, DefaultSystemConfig())
+	db, err := OpenDatabase(tempDir, DefaultSystemConfig())
 
+	assert.NoError(t, dirErr, "Expected no error when making directory")
 	assert.NoError(t, err, "Expected no error when opening the databse")
 	assert.False(t, db.isClosed, "Expected database to be open")
+	assert.DirExists(t, tempDir, "Expected temporary directory to be open")
 } 
