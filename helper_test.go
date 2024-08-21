@@ -11,29 +11,20 @@ import (
 
 )
 
-func init_tinysnb(conn Connection) error{
+func init_tinysnb(conn Connection) {
 	tinySnbPath, err := filepath.Abs(filepath.Join("kuzu-src", "dataset", "tinysnb"))
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	// Execute schema.cypher
 	schemaPath := filepath.Join(tinySnbPath, "schema.cypher")
-	if err := executeCypherFromFile(schemaPath, conn, ""); err != nil {
-		return err
-	}
+	executeCypherFromFile(schemaPath, conn, "")
 
-	// Execute copy.cypher with replacements
 	copyPath := filepath.Join(tinySnbPath, "copy.cypher")
-    
-	if err := executeCypherFromFile(copyPath, conn, filepath.Join("kuzu-src", "dataset", "tinysnb")); err != nil {
-		return err
-	}
-
-	return nil
+	executeCypherFromFile(copyPath, conn, filepath.Join("kuzu-src", "dataset", "tinysnb"))
 }
 
-func executeCypherFromFile(filePath string, conn Connection, replacePath string) error {
+func executeCypherFromFile(filePath string, conn Connection, replacePath string) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -54,16 +45,14 @@ func executeCypherFromFile(filePath string, conn Connection, replacePath string)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return err
+		panic(err)
 	}
 
-	return nil
 }
 
 func makeDB(t testing.TB) (returnDB Database, returnConn Connection){
     //TempDir function
-    tempDir, dirErr := os.MkdirTemp("", "test")
-    assert.NoError(t, dirErr, "Expected no error when making directory")
+    tempDir := t.TempDir()
 	assert.DirExists(t, tempDir, "Expected temporary directory to be open")
     db, dirErr := OpenDatabase(tempDir, DefaultSystemConfig())
     if dirErr != nil {
