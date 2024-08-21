@@ -1,29 +1,21 @@
 package kuzu
 
-import (
-	"os"
+import(
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 )
 
-func TestOpenConnection(t *testing.T) {	
-	tempDir, dirErr := os.MkdirTemp("", "testConnection")
-	defer os.RemoveAll(tempDir)
-	db, _ := makeDB(tempDir, DefaultSystemConfig())
-	conn, err := OpenConnection(db)
-
-	testDir(&testing.T{}, tempDir, dirErr)
-	testState(&testing.T{}, conn.isClosed, err, "connection", "open")
+func TestOpenConnection(t *testing.T) {
+	_, conn := makeDB(t)
+	
+	assert.False(t, conn.isClosed, "Expected connection to be open")
 }
 
 func TestCloseConnection(t *testing.T) {
-	tempDir, dirErr := os.MkdirTemp("", "testConnection")
-	defer os.RemoveAll(tempDir)
+	_, conn := makeDB(t)
 
-	db, _ := makeDB(tempDir, DefaultSystemConfig())
-	conn, err := OpenConnection(db)
 	conn.Close()
 
-	testDir(&testing.T{}, tempDir, dirErr)
-	testState(&testing.T{}, conn.isClosed, err, "connection", "closed")
+	assert.False(t, conn.isClosed, "Expected connection to be closed")
 }
