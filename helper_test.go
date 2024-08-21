@@ -19,21 +19,21 @@ func init_tinysnb(conn Connection) error{
 
 	// Execute schema.cypher
 	schemaPath := filepath.Join(tinySnbPath, "schema.cypher")
-	if err := executeSQLFromFile(schemaPath, conn, ""); err != nil {
+	if err := executeCypherFromFile(schemaPath, conn, ""); err != nil {
 		return err
 	}
 
 	// Execute copy.cypher with replacements
 	copyPath := filepath.Join(tinySnbPath, "copy.cypher")
     
-	if err := executeSQLFromFile(copyPath, conn, filepath.Join("kuzu-src", "dataset", "tinysnb")); err != nil {
+	if err := executeCypherFromFile(copyPath, conn, filepath.Join("kuzu-src", "dataset", "tinysnb")); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func executeSQLFromFile(filePath string, conn Connection, replacePath string) error {
+func executeCypherFromFile(filePath string, conn Connection, replacePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -47,8 +47,7 @@ func executeSQLFromFile(filePath string, conn Connection, replacePath string) er
 			line = strings.ReplaceAll(line, "dataset/tinysnb", replacePath)
 		}
 		if line != "" {
-            statement, _ := conn.Prepare(line)
-			if _, err := conn.Execute(statement, map[string]interface{}{"line": line}); err != nil {
+			if _, err := conn.Query(line); err != nil {
                 panic(err)
             }
 		}
