@@ -6,6 +6,10 @@ import "C"
 
 import (
 	"fmt"
+
+	"math/big"
+
+	"github.com/google/uuid"
 )
 
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
@@ -24,7 +28,7 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 			return nil, fmt.Errorf("failed to get bool value with status: %d", status)
 		}
 		return bool(value), nil
-	case C.KUZU_INT64:
+	case C.KUZU_INT64, C.KUZU_SERIAL:
 		var value C.int64_t
 		status := C.kuzu_value_get_int64(&kuzuValue, &value)
 		if status != C.KuzuSuccess {
@@ -45,6 +49,13 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 			return nil, fmt.Errorf("failed to get int16 value with status: %d", status)
 		}
 		return int16(value), nil
+	case C.KUZU_INT128:
+		var value C.kuzu_int128_t
+		status := C.kuzu_value_get_int128(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get int128 value with status: %d", status)
+		}
+		return int128ToBigInt(value)
 	case C.KUZU_INT8:
 		var value C.int8_t
 		status := C.kuzu_value_get_int8(&kuzuValue, &value)
@@ -52,6 +63,15 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 			return nil, fmt.Errorf("failed to get int8 value with status: %d", status)
 		}
 		return int8(value), nil
+	case C.KUZU_UUID:
+		var value *C.char
+		status := C.kuzu_value_get_uuid(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get uuid value with status: %d", status)
+		}
+		defer C.kuzu_destroy_string(value)
+		uuidString := C.GoString(value)
+		return uuid.Parse(uuidString)
 	case C.KUZU_UINT64:
 		var value C.uint64_t
 		status := C.kuzu_value_get_uint64(&kuzuValue, &value)
@@ -107,4 +127,20 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		defer C.kuzu_destroy_string(valueString)
 		return valueString, fmt.Errorf("unsupported data type with type id: %d. the value is force-casted to string", logicalTypeId)
 	}
+}
+
+func int128ToBigInt(value C.kuzu_int128_t) (*big.Int, error) {
+	var outString *C.char
+	status := C.kuzu_int128_t_to_string(value, &outString)
+	if status != C.KuzuSuccess {
+		return nil, fmt.Errorf("failed to convert int128 to string with status: %d", status)
+	}
+	defer C.kuzu_destroy_string(outString)
+	valueString := C.GoString(outString)
+	bigInt := new(big.Int)
+	_, success := bigInt.SetString(valueString, 10)
+	if !success {
+		return nil, fmt.Errorf("failed to convert string to big.Int")
+	}
+	return bigInt, nil
 }
