@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/kuzudb/go-kuzu"
@@ -109,4 +110,33 @@ func main() {
 	}
 	defer queryResult.Close()
 	fmt.Println(queryResult.ToString())
+
+	queryResult, err = conn.Query("RETURN CAST('184467440737095516158', 'INT128')")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer queryResult.Close()
+	s, _ := queryResult.Next()
+	v, _ := s.GetAsSlice()
+	fmt.Println(v)
+
+	queryResult, err = conn.Query("RETURN CAST('-184467440737095516158', 'INT128')")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer queryResult.Close()
+	s, _ = queryResult.Next()
+	v, _ = s.GetAsSlice()
+	fmt.Println(v)
+	fmt.Println(reflect.TypeOf(v[0]))
+
+	queryResult, err = conn.Query("RETURN CAST('123e4567-e89b-12d3-a456-426614174000', 'UUID')")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer queryResult.Close()
+	s, _ = queryResult.Next()
+	v, _ = s.GetAsSlice()
+	fmt.Println(v)
+	fmt.Println(reflect.TypeOf(v[0]))
 }
