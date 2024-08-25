@@ -78,6 +78,51 @@ func main() {
 		defer tuple.Close()
 	}
 
+	result, err = conn.Query("MATCH (a:User)-[e:Follows]->(b:User) RETURN *")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer result.Close()
+	for result.HasNext() {
+		tuple, err := result.Next()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Println(tuple.GetAsMap())
+		defer tuple.Close()
+	}
+
+	result, err = conn.Query("RETURN [[1, 2, 3], [4, 5, 6]]")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer result.Close()
+	for result.HasNext() {
+		tuple, err := result.Next()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Println(tuple.GetAsMap())
+		defer tuple.Close()
+	}
+
+	result, err = conn.Query("RETURN array_value(1,2,3,4,5)")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer result.Close()
+	for result.HasNext() {
+		tuple, err := result.Next()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Println(tuple.GetAsMap())
+		defer tuple.Close()
+	}
+
 	preparedStatement, err := conn.Prepare("MATCH (a:User)-[e:Follows]->(b:User) WHERE a.name = $1 RETURN a.name, e.since, b.name")
 	if err != nil {
 		fmt.Println("Prepare error:", err, preparedStatement)
