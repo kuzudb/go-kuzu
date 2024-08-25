@@ -52,3 +52,14 @@ func durationToKuzuInterval(inputDuration time.Duration) C.kuzu_interval_t {
 	cKuzuInterval.micros = C.int64_t(microseconds)
 	return cKuzuInterval
 }
+
+func kuzuIntervalToDuration(cKuzuInterval C.kuzu_interval_t) time.Duration {
+	days := cKuzuInterval.days
+	months := cKuzuInterval.months
+	microseconds := cKuzuInterval.micros
+	totalDays := int64(days) + int64(months)*30
+	totalSeconds := totalDays * 24 * 60 * 60
+	totalMicroseconds := totalSeconds*1000000 + int64(microseconds)
+	totalNanoseconds := totalMicroseconds * 1000
+	return time.Duration(totalNanoseconds)
+}
