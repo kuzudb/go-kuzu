@@ -1,18 +1,17 @@
 package kuzu
 
 import (
+	"bufio"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
-    "os"
-    "bufio"
-    "path/filepath"
-    "strings"
 
 	"github.com/stretchr/testify/assert"
-
 )
 
 func init_tinysnb(conn Connection) {
-	tinySnbPath, err := filepath.Abs(filepath.Join("kuzu-src", "dataset", "tinysnb"))
+	tinySnbPath, err := filepath.Abs(filepath.Join("dataset", "tinysnb"))
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +20,7 @@ func init_tinysnb(conn Connection) {
 	executeCypherFromFile(schemaPath, conn, "")
 
 	copyPath := filepath.Join(tinySnbPath, "copy.cypher")
-	executeCypherFromFile(copyPath, conn, filepath.Join("kuzu-src", "dataset", "tinysnb"))
+	executeCypherFromFile(copyPath, conn, tinySnbPath)
 }
 
 func executeCypherFromFile(filePath string, conn Connection, replacePath string) {
@@ -39,8 +38,8 @@ func executeCypherFromFile(filePath string, conn Connection, replacePath string)
 		}
 		if line != "" {
 			if _, err := conn.Query(line); err != nil {
-                panic(err)
-            }
+				panic(err)
+			}
 		}
 	}
 
@@ -50,18 +49,18 @@ func executeCypherFromFile(filePath string, conn Connection, replacePath string)
 
 }
 
-func makeDB(t testing.TB) (returnDB Database, returnConn Connection){
-    //TempDir function
-    tempDir := t.TempDir()
+func makeDB(t testing.TB) (returnDB Database, returnConn Connection) {
+	//TempDir function
+	tempDir := t.TempDir()
 	assert.DirExists(t, tempDir, "Expected temporary directory to be open")
-    db, dirErr := OpenDatabase(tempDir, DefaultSystemConfig())
-    if dirErr != nil {
-        panic(dirErr)
-    }
-    conn, err := OpenConnection(db)
-    if err != nil {
-        panic(err)
-    }
-    init_tinysnb(conn)
-    return db, conn
+	db, dirErr := OpenDatabase(tempDir, DefaultSystemConfig())
+	if dirErr != nil {
+		panic(dirErr)
+	}
+	conn, err := OpenConnection(db)
+	if err != nil {
+		panic(err)
+	}
+	init_tinysnb(conn)
+	return db, conn
 }
