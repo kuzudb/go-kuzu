@@ -39,29 +39,34 @@ func (config SystemConfig) toC() C.kuzu_system_config {
 }
 
 type Database struct {
-	CDatabase C.kuzu_database
+	cDatabase C.kuzu_database
 	isClosed  bool
 }
 
 func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 	db := Database{}
+	db.isClosed = false
 	runtime.SetFinalizer(&db, func(db *Database) {
 		db.Close()
 	})
 	cPath := C.CString(path)
 	defer C.free(unsafe.Pointer(cPath))
 	cSystemConfig := systemConfig.toC()
-	status := C.kuzu_database_init(cPath, cSystemConfig, &db.CDatabase)
+	status := C.kuzu_database_init(cPath, cSystemConfig, &db.cDatabase)
 	if status != C.KuzuSuccess {
 		return db, fmt.Errorf("failed to open database with status %d", status)
 	}
 	return db, nil
 }
 
-func (db Database) Close() {
+func OpenInMemoryDatabase(systemConfig SystemConfig) (Database, error) {
+	return OpenDatabase(":memory:", systemConfig)
+}
+
+func (db *Database) Close() {
 	if db.isClosed {
 		return
 	}
-	C.kuzu_database_destroy(&db.CDatabase)
+	C.kuzu_database_destroy(&db.cDatabase)
 	db.isClosed = true
 }
