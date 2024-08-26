@@ -5,14 +5,14 @@ package kuzu
 import "C"
 
 type PreparedStatement struct {
-	CPreparedStatement C.kuzu_prepared_statement
+	cPreparedStatement C.kuzu_prepared_statement
 	isClosed           bool
 }
 
-func (stmt PreparedStatement) Close() {
+func (stmt *PreparedStatement) Close() {
 	if stmt.isClosed {
 		return
 	}
-	C.kuzu_prepared_statement_destroy(&stmt.CPreparedStatement)
+	C.kuzu_prepared_statement_destroy(&stmt.cPreparedStatement)
 	stmt.isClosed = true
 }
