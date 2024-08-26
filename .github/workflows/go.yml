@@ -9,7 +9,10 @@ on:
 jobs:
 
   build:
-    runs-on: [ubuntu-latest, macos-14]
+    strategy:
+      matrix:
+        runner: [macos-13, ubuntu-24.04]
+    runs-on: ${{ matrix.runner }}
     steps:
     - name: Set up Go
       uses: actions/setup-go@v4
