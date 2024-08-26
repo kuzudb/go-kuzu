@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var FLOAT_EPSILON = 0.0000001
-
 func TestBool(t *testing.T) {
 	_, conn := SetupTestDatabase(t)
 	res, error := conn.Query("MATCH (a:person) WHERE a.ID = 0 RETURN a.isStudent;")
@@ -103,7 +101,7 @@ func TestDouble(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.InDelta(t, float64(5.0), value, FLOAT_EPSILON)
+	assert.InDelta(t, float64(5.0), value, floatEpsilon)
 	res.Close()
 }
 
