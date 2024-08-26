@@ -45,7 +45,6 @@ type Database struct {
 
 func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 	db := Database{}
-	db.isClosed = false
 	runtime.SetFinalizer(&db, func(db *Database) {
 		db.Close()
 	})

@@ -30,7 +30,7 @@ func TestCloseConnection(t *testing.T) {
 func TestGetMaxNumThreads(t *testing.T) {
 	db, _ := SetupTestDatabase(t)
 	conn, _ := OpenConnection(db)
-	assert.Equal(t, defaultNumThreads, conn.GetMaxNumThreads())
+	assert.Equal(t, conn.GetMaxNumThreads(), defaultNumThreads)
 	conn.Close()
 }
 
@@ -38,7 +38,7 @@ func TestSetMaxNumThreads(t *testing.T) {
 	db, _ := SetupTestDatabase(t)
 	conn, _ := OpenConnection(db)
 	conn.SetMaxNumThreads(3)
-	assert.Equal(t, uint64(3), conn.GetMaxNumThreads())
+	assert.Equal(t, conn.GetMaxNumThreads(), uint64(3))
 	conn.Close()
 }
 
@@ -57,7 +57,7 @@ func TestInterrupt(t *testing.T) {
 	conn.Interrupt()
 	wg.Wait()
 	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "Interrupted.")
+	assert.Equal(t, "Interrupted.", err.Error())
 	conn.Close()
 }
 
@@ -68,7 +68,7 @@ func TestSetTimeout(t *testing.T) {
 	conn.SetTimeout(100)
 	_, err := conn.Query(query)
 	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "Interrupted.")
+	assert.Equal(t, "Interrupted.", err.Error())
 	conn.Close()
 }
 
@@ -86,7 +86,7 @@ func TestQuery(t *testing.T) {
 	assert.NotNil(t, flatTuple)
 	slice, err := flatTuple.GetAsSlice()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(1), slice[0])
+	assert.Equal(t, slice[0], int64(1))
 	result.Close()
 	conn.Close()
 }
@@ -144,7 +144,7 @@ func TestExecute(t *testing.T) {
 	assert.NotNil(t, flatTuple)
 	slice, err := flatTuple.GetAsSlice()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(1), slice[0])
+	assert.Equal(t, slice[0], int64(1))
 	result.Close()
 	stmt.Close()
 	conn.Close()
