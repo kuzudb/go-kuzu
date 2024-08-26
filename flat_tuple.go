@@ -16,6 +16,7 @@ func (tuple *FlatTuple) Close() {
 		return
 	}
 	C.kuzu_flat_tuple_destroy(&tuple.cFlatTuple)
+	tuple.isClosed = true
 }
 
 func (tuple *FlatTuple) GetAsString() string {

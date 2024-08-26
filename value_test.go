@@ -26,7 +26,7 @@ func TestInt64(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(35))
+	assert.Equal(t, int64(35), value)
 	res.Close()
 }
 
@@ -37,7 +37,7 @@ func TestInt8(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int8(5))
+	assert.Equal(t, int8(5), value)
 	res.Close()
 }
 
@@ -48,7 +48,7 @@ func TestUint8(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, uint8(250))
+	assert.Equal(t, uint8(250), value)
 	res.Close()
 }
 
@@ -59,7 +59,7 @@ func TestUint16(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, uint16(33768))
+	assert.Equal(t, uint16(33768), value)
 	res.Close()
 }
 
@@ -70,7 +70,7 @@ func TestUint32(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, uint32(32800))
+	assert.Equal(t, uint32(32800), value)
 	res.Close()
 }
 
@@ -81,7 +81,7 @@ func TestUint64(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, uint64(9223372036854775808))
+	assert.Equal(t, uint64(9223372036854775808), value)
 	res.Close()
 }
 
@@ -92,7 +92,7 @@ func TestSerial(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(2))
+	assert.Equal(t, int64(2), value)
 	res.Close()
 }
 
@@ -103,7 +103,7 @@ func TestDouble(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.InDelta(t, value, float64(5.0), FLOAT_EPSILON)
+	assert.InDelta(t, float64(5.0), value, FLOAT_EPSILON)
 	res.Close()
 }
 
@@ -114,7 +114,7 @@ func TestString(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, "Alice")
+	assert.Equal(t, "Alice", value)
 	res.Close()
 }
 
@@ -125,9 +125,9 @@ func TestBlob(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value.([]byte)[0], byte(0xAA))
-	assert.Equal(t, value.([]byte)[1], byte(0xBB))
-	assert.Equal(t, value.([]byte)[2], byte(0xCD))
-	assert.Equal(t, value.([]byte)[3], byte(0x1A))
+	assert.Equal(t, byte(0xAA), value.([]byte)[0])
+	assert.Equal(t, byte(0xBB), value.([]byte)[1])
+	assert.Equal(t, byte(0xCD), value.([]byte)[2])
+	assert.Equal(t, byte(0x1A), value.([]byte)[3])
 	res.Close()
 }

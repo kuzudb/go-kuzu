@@ -19,7 +19,7 @@ func TestBoolParam(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(1))
+	assert.Equal(t, int64(1), value)
 }
 
 func TestInt64Param(t *testing.T) {
@@ -34,7 +34,7 @@ func TestInt64Param(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(1))
+	assert.Equal(t, int64(1), value)
 }
 
 func TestInt32Param(t *testing.T) {
@@ -49,7 +49,7 @@ func TestInt32Param(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(2))
+	assert.Equal(t, int64(2), value)
 }
 
 func TestInt16Param(t *testing.T) {
@@ -64,5 +64,5 @@ func TestInt16Param(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.Equal(t, value, int64(2))
+	assert.Equal(t, int64(2), value)
 }
