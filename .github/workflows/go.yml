@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        runner: [macos-13, ubuntu-24.04]
+        runner: [macos-14, ubuntu-24.04]
     runs-on: ${{ matrix.runner }}
     steps:
     - name: Set up Go
