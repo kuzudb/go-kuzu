@@ -8,7 +8,8 @@ on:
 
 jobs:
 
-  build:
+  build-and-test:
+    name: Build and test
     strategy:
       matrix:
         runner: [macos-14, ubuntu-24.04]
