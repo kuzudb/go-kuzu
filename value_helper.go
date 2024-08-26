@@ -20,15 +20,36 @@ type InternalID struct {
 	Offset  uint64
 }
 
-func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
-	node := make(map[string]any)
+type Node struct {
+	ID         InternalID
+	Label      string
+	Properties map[string]any
+}
+
+type Relationship struct {
+	SourceID      InternalID
+	DestinationID InternalID
+	Label         string
+	Properties    map[string]any
+}
+
+type RecursiveRelationship struct {
+	Nodes         []Node
+	Relationships []Relationship
+}
+
+func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (Node, error) {
+	node := Node{}
+	node.Properties = make(map[string]any)
 	idValue := C.kuzu_value{}
 	C.kuzu_node_val_get_id_val(&kuzuValue, &idValue)
-	node["_id"], _ = kuzuValueToGoValue(idValue)
+	nodeId, _ := kuzuValueToGoValue(idValue)
+	node.ID = nodeId.(InternalID)
 	C.kuzu_value_destroy(&idValue)
 	labelValue := C.kuzu_value{}
 	C.kuzu_node_val_get_label_val(&kuzuValue, &labelValue)
-	node["_label"], _ = kuzuValueToGoValue(labelValue)
+	nodeLabel, _ := kuzuValueToGoValue(labelValue)
+	node.Label = nodeLabel.(string)
 	C.kuzu_value_destroy(&labelValue)
 	var propertySize C.uint64_t
 	C.kuzu_node_val_get_property_size(&kuzuValue, &propertySize)
@@ -44,7 +65,7 @@ func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 		if err != nil {
 			errors = append(errors, err)
 		}
-		node[keyString] = value
+		node.Properties[keyString] = value
 		C.kuzu_value_destroy(&currentVal)
 	}
 	if len(errors) > 0 {
@@ -53,18 +74,22 @@ func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 	return node, nil
 }
 
-func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
-	relation := make(map[string]any)
+func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (Relationship, error) {
+	relation := Relationship{}
+	relation.Properties = make(map[string]any)
 	idValue := C.kuzu_value{}
 	C.kuzu_rel_val_get_src_id_val(&kuzuValue, &idValue)
-	relation["_src"], _ = kuzuValueToGoValue(idValue)
+	src, _ := kuzuValueToGoValue(idValue)
+	relation.SourceID = src.(InternalID)
 	C.kuzu_value_destroy(&idValue)
 	C.kuzu_rel_val_get_dst_id_val(&kuzuValue, &idValue)
-	relation["_dst"], _ = kuzuValueToGoValue(idValue)
+	dst, _ := kuzuValueToGoValue(idValue)
+	relation.DestinationID = dst.(InternalID)
 	C.kuzu_value_destroy(&idValue)
 	labelValue := C.kuzu_value{}
 	C.kuzu_rel_val_get_label_val(&kuzuValue, &labelValue)
-	relation["_label"], _ = kuzuValueToGoValue(labelValue)
+	label, _ := kuzuValueToGoValue(labelValue)
+	relation.Label = label.(string)
 	C.kuzu_value_destroy(&labelValue)
 	var propertySize C.uint64_t
 	C.kuzu_rel_val_get_property_size(&kuzuValue, &propertySize)
@@ -80,13 +105,35 @@ func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 		if err != nil {
 			errors = append(errors, err)
 		}
-		relation[keyString] = value
+		relation.Properties[keyString] = value
 		C.kuzu_value_destroy(&currentVal)
 	}
 	if len(errors) > 0 {
 		return relation, fmt.Errorf("failed to get values: %v", errors)
 	}
 	return relation, nil
+}
+
+func kuzuRecursiveRelValueToGoValue(kuzuValue C.kuzu_value) (RecursiveRelationship, error) {
+	var nodesVal C.kuzu_value
+	var relsVal C.kuzu_value
+	C.kuzu_value_get_recursive_rel_node_list(&kuzuValue, &nodesVal)
+	C.kuzu_value_get_recursive_rel_rel_list(&kuzuValue, &relsVal)
+	defer C.kuzu_value_destroy(&nodesVal)
+	defer C.kuzu_value_destroy(&relsVal)
+	nodes, _ := kuzuListValueToGoValue(nodesVal)
+	rels, _ := kuzuListValueToGoValue(relsVal)
+	recursiveRel := RecursiveRelationship{}
+	recursiveRel.Nodes = make([]Node, len(nodes))
+	for i, n := range nodes {
+		recursiveRel.Nodes[i] = n.(Node)
+	}
+	relationships := make([]Relationship, len(rels))
+	for i, r := range rels {
+		relationships[i] = r.(Relationship)
+	}
+	recursiveRel.Relationships = relationships
+	return recursiveRel, nil
 }
 
 func kuzuListValueToGoValue(kuzuValue C.kuzu_value) ([]any, error) {
@@ -108,6 +155,159 @@ func kuzuListValueToGoValue(kuzuValue C.kuzu_value) ([]any, error) {
 		return list, fmt.Errorf("failed to get values: %v", errors)
 	}
 	return list, nil
+}
+
+func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
+	structure := make(map[string]any)
+	var propertySize C.uint64_t
+	C.kuzu_value_get_struct_num_fields(&kuzuValue, &propertySize)
+	var currentKey *C.char
+	var currentVal C.kuzu_value
+	var errors []error
+	for i := C.uint64_t(0); i < propertySize; i++ {
+		C.kuzu_value_get_struct_field_name(&kuzuValue, i, &currentKey)
+		keyString := C.GoString(currentKey)
+		C.kuzu_destroy_string(currentKey)
+		C.kuzu_value_get_struct_field_value(&kuzuValue, i, &currentVal)
+		value, err := kuzuValueToGoValue(currentVal)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		structure[keyString] = value
+		C.kuzu_value_destroy(&currentVal)
+	}
+	if len(errors) > 0 {
+		return structure, fmt.Errorf("failed to get values: %v", errors)
+	}
+	return structure, nil
+}
+
+func kuzuRdfVariantToGoValue(kuzuValue C.kuzu_value) (any, error) {
+	var dataTypeId C.kuzu_data_type_id
+	status := C.kuzu_rdf_variant_get_type(&kuzuValue, &dataTypeId)
+	if status != C.KuzuSuccess {
+		return nil, fmt.Errorf("failed to get rdf variant type with status: %d", status)
+	}
+	switch dataTypeId {
+	case C.KUZU_STRING:
+		var value *C.char
+		status := C.kuzu_rdf_variant_get_string(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant string value with status: %d", status)
+		}
+		defer C.kuzu_destroy_string(value)
+		return C.GoString(value), nil
+	case C.KUZU_BLOB:
+		var value *C.uint8_t
+		status := C.kuzu_rdf_variant_get_blob(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant blob value with status: %d", status)
+		}
+		defer C.kuzu_destroy_blob(value)
+		blobSize := C.strlen((*C.char)(unsafe.Pointer(value)))
+		blob := C.GoBytes(unsafe.Pointer(value), C.int(blobSize))
+		return blob, nil
+	case C.KUZU_INT64:
+		var value C.int64_t
+		status := C.kuzu_rdf_variant_get_int64(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant int64 value with status: %d", status)
+		}
+		return int64(value), nil
+	case C.KUZU_INT32:
+		var value C.int32_t
+		status := C.kuzu_rdf_variant_get_int32(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant int32 value with status: %d", status)
+		}
+		return int32(value), nil
+	case C.KUZU_INT16:
+		var value C.int16_t
+		status := C.kuzu_rdf_variant_get_int16(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant int16 value with status: %d", status)
+		}
+		return int16(value), nil
+	case C.KUZU_INT8:
+		var value C.int8_t
+		status := C.kuzu_rdf_variant_get_int8(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant int8 value with status: %d", status)
+		}
+		return int8(value), nil
+	case C.KUZU_UINT64:
+		var value C.uint64_t
+		status := C.kuzu_rdf_variant_get_uint64(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant uint64 value with status: %d", status)
+		}
+		return uint64(value), nil
+	case C.KUZU_UINT32:
+		var value C.uint32_t
+		status := C.kuzu_rdf_variant_get_uint32(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant uint32 value with status: %d", status)
+		}
+		return uint32(value), nil
+	case C.KUZU_UINT16:
+		var value C.uint16_t
+		status := C.kuzu_rdf_variant_get_uint16(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant uint16 value with status: %d", status)
+		}
+		return uint16(value), nil
+	case C.KUZU_UINT8:
+		var value C.uint8_t
+		status := C.kuzu_rdf_variant_get_uint8(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant uint8 value with status: %d", status)
+		}
+		return uint8(value), nil
+	case C.KUZU_FLOAT:
+		var value C.float
+		status := C.kuzu_rdf_variant_get_float(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant float value with status: %d", status)
+		}
+		return float32(value), nil
+	case C.KUZU_DOUBLE:
+		var value C.double
+		status := C.kuzu_rdf_variant_get_double(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant double value with status: %d", status)
+		}
+		return float64(value), nil
+	case C.KUZU_BOOL:
+		var value C.bool
+		status := C.kuzu_rdf_variant_get_bool(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant bool value with status: %d", status)
+		}
+		return bool(value), nil
+	case C.KUZU_DATE:
+		var value C.kuzu_date_t
+		status := C.kuzu_rdf_variant_get_date(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant date value with status: %d", status)
+		}
+		return kuzuDateToTime(value), nil
+	case C.KUZU_TIMESTAMP:
+		var value C.kuzu_timestamp_t
+		status := C.kuzu_rdf_variant_get_timestamp(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant timestamp value with status: %d", status)
+		}
+		return time.Unix(0, int64(value.value)*1000), nil
+	case C.KUZU_INTERVAL:
+		var value C.kuzu_interval_t
+		status := C.kuzu_rdf_variant_get_interval(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get rdf variant interval value with status: %d", status)
+		}
+		return kuzuIntervalToDuration(value), nil
+	default:
+		return nil, fmt.Errorf("unsupported rdf variant type with type id: %d", dataTypeId)
+	}
 }
 
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
@@ -283,8 +483,14 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		return kuzuNodeValueToGoValue(kuzuValue)
 	case C.KUZU_REL:
 		return kuzuRelValueToGoValue(kuzuValue)
+	case C.KUZU_RECURSIVE_REL:
+		return kuzuRecursiveRelValueToGoValue(kuzuValue)
 	case C.KUZU_LIST, C.KUZU_ARRAY:
 		return kuzuListValueToGoValue(kuzuValue)
+	case C.KUZU_STRUCT, C.KUZU_UNION:
+		return kuzuStructValueToGoValue(kuzuValue)
+	case C.KUZU_RDF_VARIANT:
+		return kuzuRdfVariantToGoValue(kuzuValue)
 	default:
 		valueString := C.kuzu_value_to_string(&kuzuValue)
 		defer C.kuzu_destroy_string(valueString)

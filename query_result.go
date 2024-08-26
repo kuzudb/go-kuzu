@@ -79,6 +79,22 @@ func (queryResult QueryResult) Next() (FlatTuple, error) {
 	return tuple, nil
 }
 
+func (queryResult QueryResult) HasNextQueryResult() bool {
+	return bool(C.kuzu_query_result_has_next_query_result(&queryResult.CQueryResult))
+}
+
+func (queryResult QueryResult) NextQueryResult() (QueryResult, error) {
+	nextQueryResult := QueryResult{}
+	runtime.SetFinalizer(&nextQueryResult, func(nextQueryResult *QueryResult) {
+		nextQueryResult.Close()
+	})
+	status := C.kuzu_query_result_get_next_query_result(&queryResult.CQueryResult, &nextQueryResult.CQueryResult)
+	if status != C.KuzuSuccess {
+		return nextQueryResult, fmt.Errorf("failed to get next query result with status %d", status)
+	}
+	return nextQueryResult, nil
+}
+
 func (queryResult QueryResult) GetCompilingTime() float64 {
 	var cQuerySummary C.kuzu_query_summary
 	C.kuzu_query_result_get_query_summary(&queryResult.CQueryResult, &cQuerySummary)
