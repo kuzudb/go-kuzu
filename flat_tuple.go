@@ -27,12 +27,16 @@ func (tuple FlatTuple) GetAsString() string {
 func (tuple FlatTuple) GetAsSlice() ([]any, error) {
 	length := uint64(tuple.queryResult.GetNumberOfColumns())
 	values := make([]any, 0, length)
+	var errors []error
 	for i := uint64(0); i < length; i++ {
 		value, err := tuple.GetValue(i)
 		if err != nil {
-			return nil, err
+			errors = append(errors, err)
 		}
 		values = append(values, value)
+	}
+	if len(errors) > 0 {
+		return values, fmt.Errorf("failed to get values: %v", errors)
 	}
 	return values, nil
 }
@@ -41,13 +45,15 @@ func (tuple FlatTuple) GetAsMap() (map[string]any, error) {
 	columnNames := tuple.queryResult.GetColumnNames()
 	values, err := tuple.GetAsSlice()
 	if err != nil {
-		return nil, err
+		if len(columnNames) != len(values) {
+			return nil, err
+		}
 	}
 	m := make(map[string]any)
 	for i, columnName := range columnNames {
 		m[columnName] = values[i]
 	}
-	return m, nil
+	return m, err
 }
 
 func (tuple FlatTuple) GetValue(index uint64) (any, error) {
