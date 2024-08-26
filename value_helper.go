@@ -434,6 +434,13 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 			return nil, fmt.Errorf("failed to get timestamp_ns value with status: %d", status)
 		}
 		return time.Unix(0, int64(value.value)), nil
+	case C.KUZU_TIMESTAMP_MS:
+		var value C.kuzu_timestamp_ms_t
+		status := C.kuzu_value_get_timestamp_ms(&kuzuValue, &value)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get timestamp_ms value with status: %d", status)
+		}
+		return time.Unix(0, int64(value.value)*1000000), nil
 	case C.KUZU_TIMESTAMP_SEC:
 		var value C.kuzu_timestamp_sec_t
 		status := C.kuzu_value_get_timestamp_sec(&kuzuValue, &value)

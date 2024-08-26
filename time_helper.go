@@ -23,7 +23,7 @@ func timeToKuzuDate(inputTime time.Time) C.kuzu_date_t {
 
 func kuzuDateToTime(cKuzuDate C.kuzu_date_t) time.Time {
 	diff := time.Duration(cKuzuDate.days) * 24 * time.Hour
-	return unixEpoch().Add(diff)
+	return unixEpoch().UTC().Add(diff)
 }
 
 func timeToKuzuTimestamp(inputTime time.Time) C.kuzu_timestamp_t {
