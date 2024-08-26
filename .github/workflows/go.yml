@@ -26,3 +26,7 @@ jobs:
 
     - name: Test
       run: go test -v
+    
+    - name: Run example
+      working-directory: example
+      run: go run example.go
