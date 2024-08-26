@@ -1,6 +1,6 @@
 module github.com/kuzudb/go-kuzu/examples
 
-go 1.22.5
+go 1.20
 
 replace github.com/kuzudb/go-kuzu => ../
 
