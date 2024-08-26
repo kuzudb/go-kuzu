@@ -17,6 +17,7 @@ var (
 )
 
 var defaultNumThreads = uint64(4)
+var floatEpsilon = 0.0000001
 
 func initTinySNB(conn Connection) error {
 	tinySnbPath, err := filepath.Abs(filepath.Join("dataset", "tinysnb"))

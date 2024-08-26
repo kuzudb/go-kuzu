@@ -93,47 +93,58 @@ func (conn *Connection) Execute(preparedStatement PreparedStatement, args map[st
 func (conn *Connection) bindParameter(preparedStatement PreparedStatement, key string, value any) error {
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
+	var status C.kuzu_state
+	if value == nil {
+		cValue := C.kuzu_value_create_null()
+		defer C.kuzu_value_destroy(cValue)
+		status = C.kuzu_prepared_statement_bind_value(&preparedStatement.cPreparedStatement, cKey, cValue)
+		if status != C.KuzuSuccess {
+			return fmt.Errorf("failed to bind null value with status %d", status)
+		}
+		return nil
+	}
 	switch v := value.(type) {
 	case string:
 		cValue := C.CString(v)
 		defer C.free(unsafe.Pointer(cValue))
-		C.kuzu_prepared_statement_bind_string(&preparedStatement.cPreparedStatement, cKey, cValue)
+		status = C.kuzu_prepared_statement_bind_string(&preparedStatement.cPreparedStatement, cKey, cValue)
 	case bool:
-		C.kuzu_prepared_statement_bind_bool(&preparedStatement.cPreparedStatement, cKey, C.bool(v))
-	case int:
-		C.kuzu_prepared_statement_bind_int64(&preparedStatement.cPreparedStatement, cKey, C.int64_t(v))
-	case int64:
-		C.kuzu_prepared_statement_bind_int64(&preparedStatement.cPreparedStatement, cKey, C.int64_t(v))
+		status = C.kuzu_prepared_statement_bind_bool(&preparedStatement.cPreparedStatement, cKey, C.bool(v))
+	case int64, int:
+		status = C.kuzu_prepared_statement_bind_int64(&preparedStatement.cPreparedStatement, cKey, C.int64_t(v.(int64)))
 	case int32:
-		C.kuzu_prepared_statement_bind_int32(&preparedStatement.cPreparedStatement, cKey, C.int32_t(v))
+		status = C.kuzu_prepared_statement_bind_int32(&preparedStatement.cPreparedStatement, cKey, C.int32_t(v))
 	case int16:
-		C.kuzu_prepared_statement_bind_int16(&preparedStatement.cPreparedStatement, cKey, C.int16_t(v))
+		status = C.kuzu_prepared_statement_bind_int16(&preparedStatement.cPreparedStatement, cKey, C.int16_t(v))
 	case int8:
-		C.kuzu_prepared_statement_bind_int8(&preparedStatement.cPreparedStatement, cKey, C.int8_t(v))
+		status = C.kuzu_prepared_statement_bind_int8(&preparedStatement.cPreparedStatement, cKey, C.int8_t(v))
 	case uint:
-		C.kuzu_prepared_statement_bind_uint64(&preparedStatement.cPreparedStatement, cKey, C.uint64_t(v))
+		status = C.kuzu_prepared_statement_bind_uint64(&preparedStatement.cPreparedStatement, cKey, C.uint64_t(v))
 	case uint64:
-		C.kuzu_prepared_statement_bind_uint64(&preparedStatement.cPreparedStatement, cKey, C.uint64_t(v))
+		status = C.kuzu_prepared_statement_bind_uint64(&preparedStatement.cPreparedStatement, cKey, C.uint64_t(v))
 	case uint32:
-		C.kuzu_prepared_statement_bind_uint32(&preparedStatement.cPreparedStatement, cKey, C.uint32_t(v))
+		status = C.kuzu_prepared_statement_bind_uint32(&preparedStatement.cPreparedStatement, cKey, C.uint32_t(v))
 	case uint16:
-		C.kuzu_prepared_statement_bind_uint16(&preparedStatement.cPreparedStatement, cKey, C.uint16_t(v))
+		status = C.kuzu_prepared_statement_bind_uint16(&preparedStatement.cPreparedStatement, cKey, C.uint16_t(v))
 	case uint8:
-		C.kuzu_prepared_statement_bind_uint8(&preparedStatement.cPreparedStatement, cKey, C.uint8_t(v))
+		status = C.kuzu_prepared_statement_bind_uint8(&preparedStatement.cPreparedStatement, cKey, C.uint8_t(v))
 	case float64:
-		C.kuzu_prepared_statement_bind_double(&preparedStatement.cPreparedStatement, cKey, C.double(v))
+		status = C.kuzu_prepared_statement_bind_double(&preparedStatement.cPreparedStatement, cKey, C.double(v))
 	case float32:
-		C.kuzu_prepared_statement_bind_float(&preparedStatement.cPreparedStatement, cKey, C.float(v))
+		status = C.kuzu_prepared_statement_bind_float(&preparedStatement.cPreparedStatement, cKey, C.float(v))
 	case time.Time:
 		if timeHasNanoseconds(v) {
-			C.kuzu_prepared_statement_bind_timestamp_ns(&preparedStatement.cPreparedStatement, cKey, timeToKuzuTimestampNs(v))
+			status = C.kuzu_prepared_statement_bind_timestamp_ns(&preparedStatement.cPreparedStatement, cKey, timeToKuzuTimestampNs(v))
 		} else {
-			C.kuzu_prepared_statement_bind_timestamp(&preparedStatement.cPreparedStatement, cKey, timeToKuzuTimestamp(v))
+			status = C.kuzu_prepared_statement_bind_timestamp(&preparedStatement.cPreparedStatement, cKey, timeToKuzuTimestamp(v))
 		}
 	case time.Duration:
-		C.kuzu_prepared_statement_bind_interval(&preparedStatement.cPreparedStatement, cKey, durationToKuzuInterval(v))
+		status = C.kuzu_prepared_statement_bind_interval(&preparedStatement.cPreparedStatement, cKey, durationToKuzuInterval(v))
 	default:
 		return fmt.Errorf("unsupported type")
+	}
+	if status != C.KuzuSuccess {
+		return fmt.Errorf("failed to bind value with status %d", status)
 	}
 	return nil
 }
