@@ -1,3 +1,0 @@
-[submodule "kuzu-src"]
-	path = kuzu-src
-	url = https://github.com/kuzudb/kuzu
