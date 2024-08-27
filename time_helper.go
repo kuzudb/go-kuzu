@@ -9,10 +9,12 @@ import (
 	"time"
 )
 
+// unixEpoch returns the Unix epoch time.
 func unixEpoch() time.Time {
 	return time.Unix(0, 0)
 }
 
+// timeToKuzuDate converts a time.Time to a kuzu_date_t.
 func timeToKuzuDate(inputTime time.Time) C.kuzu_date_t {
 	diff := inputTime.Sub(unixEpoch())
 	diffDays := math.Floor(diff.Hours() / 24)
@@ -21,11 +23,13 @@ func timeToKuzuDate(inputTime time.Time) C.kuzu_date_t {
 	return cKuzuDate
 }
 
+// kuzuDateToTime converts a kuzu_date_t to a time.Time in UTC.
 func kuzuDateToTime(cKuzuDate C.kuzu_date_t) time.Time {
 	diff := time.Duration(cKuzuDate.days) * 24 * time.Hour
 	return unixEpoch().UTC().Add(diff)
 }
 
+// timeToKuzuTimestamp converts a time.Time to a kuzu_timestamp_t.
 func timeToKuzuTimestamp(inputTime time.Time) C.kuzu_timestamp_t {
 	nanoseconds := inputTime.UnixNano()
 	microseconds := nanoseconds / 1000
@@ -34,6 +38,7 @@ func timeToKuzuTimestamp(inputTime time.Time) C.kuzu_timestamp_t {
 	return cKuzuTime
 }
 
+// timeToKuzuTimestampNs converts a time.Time to a kuzu_timestamp_ns_t.
 func timeToKuzuTimestampNs(inputTime time.Time) C.kuzu_timestamp_ns_t {
 	nanoseconds := inputTime.UnixNano()
 	cKuzuTime := C.kuzu_timestamp_ns_t{}
@@ -41,10 +46,12 @@ func timeToKuzuTimestampNs(inputTime time.Time) C.kuzu_timestamp_ns_t {
 	return cKuzuTime
 }
 
+// timeHasNanoseconds returns true if the time.Time has non-zero nanoseconds.
 func timeHasNanoseconds(inputTime time.Time) bool {
 	return inputTime.Nanosecond() != 0
 }
 
+// durationToKuzuInterval converts a time.Duration to a kuzu_interval_t.
 func durationToKuzuInterval(inputDuration time.Duration) C.kuzu_interval_t {
 	microseconds := inputDuration.Microseconds()
 
@@ -53,6 +60,7 @@ func durationToKuzuInterval(inputDuration time.Duration) C.kuzu_interval_t {
 	return cKuzuInterval
 }
 
+// kuzuIntervalToDuration converts a kuzu_interval_t to a time.Duration.
 func kuzuIntervalToDuration(cKuzuInterval C.kuzu_interval_t) time.Duration {
 	days := cKuzuInterval.days
 	months := cKuzuInterval.months
