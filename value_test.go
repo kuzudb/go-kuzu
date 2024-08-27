@@ -326,3 +326,24 @@ func TestArray(t *testing.T) {
 	value, _ := next.GetValue(0)
 	assert.Equal(t, []interface{}{int64(3), int64(4), int64(12), int64(11)}, value)
 }
+
+func TestStruct(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("RETURN {name: 'Alice', age: 30}")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, "Alice", value.(map[string]interface{})["name"])
+	assert.Equal(t, int64(30), value.(map[string]interface{})["age"])
+}
+
+func TestUnion(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("MATCH (m:movies) WHERE m.length = 2544 RETURN m.grade;")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.InDelta(t, float64(8.989), value.(map[string]any)["credit"], floatEpsilon)
+}
