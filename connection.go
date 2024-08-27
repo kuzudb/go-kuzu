@@ -11,11 +11,13 @@ import (
 	"unsafe"
 )
 
+// Connection represents a connection to a Kùzu database.
 type Connection struct {
 	cConnection C.kuzu_connection
 	isClosed    bool
 }
 
+// OpenConnection opens a connection to the specified database.
 func OpenConnection(database Database) (Connection, error) {
 	conn := Connection{}
 	runtime.SetFinalizer(&conn, func(conn *Connection) {
@@ -28,6 +30,8 @@ func OpenConnection(database Database) (Connection, error) {
 	return conn, nil
 }
 
+// Close closes the Connection. Calling this method is optional.
+// The Connection will be closed automatically when it is garbage collected.
 func (conn *Connection) Close() {
 	if conn.isClosed {
 		return
@@ -36,24 +40,33 @@ func (conn *Connection) Close() {
 	conn.isClosed = true
 }
 
+// GetMaxNumThreads returns the maximum number of threads that can be used for
+// executing a query in parallel.
 func (conn *Connection) GetMaxNumThreads() uint64 {
 	numThreads := C.uint64_t(0)
 	C.kuzu_connection_get_max_num_thread_for_exec(&conn.cConnection, &numThreads)
 	return uint64(numThreads)
 }
 
+// SetMaxNumThreads sets the maximum number of threads that can be used for
+// executing a query in parallel.
 func (conn *Connection) SetMaxNumThreads(numThreads uint64) {
 	C.kuzu_connection_set_max_num_thread_for_exec(&conn.cConnection, C.uint64_t(numThreads))
 }
 
+// Interrupt interrupts the execution of the current query on the connection.
 func (conn *Connection) Interrupt() {
 	C.kuzu_connection_interrupt(&conn.cConnection)
 }
 
+// SetTimeout sets the timeout for the queries executed on the connection.
+// The timeout is specified in milliseconds. A value of 0 means no timeout.
+// If a query takes longer than the specified timeout, it will be interrupted.
 func (conn *Connection) SetTimeout(timeout uint64) {
 	C.kuzu_connection_set_query_timeout(&conn.cConnection, C.uint64_t(timeout))
 }
 
+// Query executes the specified query string and returns the result.
 func (conn *Connection) Query(query string) (QueryResult, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
@@ -70,6 +83,8 @@ func (conn *Connection) Query(query string) (QueryResult, error) {
 	return queryResult, nil
 }
 
+// Execute executes the specified prepared statement with the specified arguments and returns the result.
+// The arguments are a map of parameter names to values.
 func (conn *Connection) Execute(preparedStatement PreparedStatement, args map[string]any) (QueryResult, error) {
 	for key, value := range args {
 		err := conn.bindParameter(preparedStatement, key, value)
@@ -90,6 +105,7 @@ func (conn *Connection) Execute(preparedStatement PreparedStatement, args map[st
 	return queryResult, nil
 }
 
+// BindParameter binds a parameter to the prepared statement.
 func (conn *Connection) bindParameter(preparedStatement PreparedStatement, key string, value any) error {
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
@@ -149,6 +165,8 @@ func (conn *Connection) bindParameter(preparedStatement PreparedStatement, key s
 	return nil
 }
 
+// Prepare returns a prepared statement for the specified query string.
+// The prepared statement can be used to execute the query with parameters.
 func (conn *Connection) Prepare(query string) (PreparedStatement, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))

@@ -15,17 +15,22 @@ import (
 	"github.com/google/uuid"
 )
 
+// InternalID represents the internal ID of a node or relationship in Kùzu.
 type InternalID struct {
 	TableID uint64
 	Offset  uint64
 }
 
+// Node represents a node retrieved from Kùzu.
+// A node has an ID, a label, and properties.
 type Node struct {
 	ID         InternalID
 	Label      string
 	Properties map[string]any
 }
 
+// Relationship represents a relationship retrieved from Kùzu.
+// A relationship has a source ID, a destination ID, a label, and properties.
 type Relationship struct {
 	SourceID      InternalID
 	DestinationID InternalID
@@ -33,11 +38,16 @@ type Relationship struct {
 	Properties    map[string]any
 }
 
+// RecursiveRelationship represents a recursive relationship retrieved from a
+// path query in Kùzu. A recursive relationship has a list of nodes and a list
+// of relationships.
 type RecursiveRelationship struct {
 	Nodes         []Node
 	Relationships []Relationship
 }
 
+// kuzuNodeValueToGoValue converts a kuzu_value representing a node to a Node
+// struct in Go.
 func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (Node, error) {
 	node := Node{}
 	node.Properties = make(map[string]any)
@@ -74,6 +84,8 @@ func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (Node, error) {
 	return node, nil
 }
 
+// kuzuRelValueToGoValue converts a kuzu_value representing a relationship to a
+// Relationship struct in Go.
 func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (Relationship, error) {
 	relation := Relationship{}
 	relation.Properties = make(map[string]any)
@@ -114,6 +126,8 @@ func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (Relationship, error) {
 	return relation, nil
 }
 
+// kuzuRecursiveRelValueToGoValue converts a kuzu_value representing a recursive
+// relationship to a RecursiveRelationship struct in Go.
 func kuzuRecursiveRelValueToGoValue(kuzuValue C.kuzu_value) (RecursiveRelationship, error) {
 	var nodesVal C.kuzu_value
 	var relsVal C.kuzu_value
@@ -136,6 +150,8 @@ func kuzuRecursiveRelValueToGoValue(kuzuValue C.kuzu_value) (RecursiveRelationsh
 	return recursiveRel, nil
 }
 
+// kuzuListValueToGoValue converts a kuzu_value representing a LIST or ARRAY to
+// a slice of any in Go.
 func kuzuListValueToGoValue(kuzuValue C.kuzu_value) ([]any, error) {
 	var listSize C.uint64_t
 	cLogicalType := C.kuzu_logical_type{}
@@ -165,6 +181,8 @@ func kuzuListValueToGoValue(kuzuValue C.kuzu_value) ([]any, error) {
 	return list, nil
 }
 
+// kuzuStructValueToGoValue converts a kuzu_value representing a STRUCT to a
+// map of string to any in Go.
 func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 	structure := make(map[string]any)
 	var propertySize C.uint64_t
@@ -190,6 +208,8 @@ func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 	return structure, nil
 }
 
+// kuzuRdfVariantToGoValue converts a kuzu_value representing an RDF variant to
+// a corresponding Go value.
 func kuzuRdfVariantToGoValue(kuzuValue C.kuzu_value) (any, error) {
 	var dataTypeId C.kuzu_data_type_id
 	status := C.kuzu_rdf_variant_get_type(&kuzuValue, &dataTypeId)
@@ -318,6 +338,7 @@ func kuzuRdfVariantToGoValue(kuzuValue C.kuzu_value) (any, error) {
 	}
 }
 
+// kuzuValueToGoValue converts a kuzu_value to a corresponding Go value.
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 	if C.kuzu_value_is_null(&kuzuValue) {
 		return nil, nil
