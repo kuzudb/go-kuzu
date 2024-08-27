@@ -403,3 +403,19 @@ func TestRelationship(t *testing.T) {
 	assert.Equal(t, rel.DestinationID, dst.ID)
 	assert.Equal(t, int64(2010), rel.Properties["year"])
 }
+
+func TestRecursiveRel(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("MATCH (a:person)-[e:studyAt*1..1]->(b:organisation) WHERE a.fName = 'Alice' RETURN e;")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	recursiveRel := value.(RecursiveRelationship)
+	assert.Equal(t, len(recursiveRel.Nodes), 0)
+	assert.Equal(t, len(recursiveRel.Relationships), 1)
+	rel := recursiveRel.Relationships[0]
+	assert.Equal(t, "studyAt", rel.Label)
+	assert.Equal(t, int16(5), rel.Properties["length"])
+	assert.Equal(t, int64(2021), rel.Properties["year"])
+}
