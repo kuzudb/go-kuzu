@@ -1,6 +1,7 @@
 package kuzu
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -100,6 +101,26 @@ func TestUint8(t *testing.T) {
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
 	assert.Equal(t, uint8(250), value)
+	res.Close()
+}
+
+func TestInt128(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("RETURN CAST (18446744073709551610, \"INT128\")")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	int128Value := value.(*big.Int)
+	assert.Equal(t, "18446744073709551610", int128Value.String())
+
+	res, error = conn.Query("RETURN CAST (-18446744073709551610, \"INT128\")")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ = res.Next()
+	value, _ = next.GetValue(0)
+	int128Value = value.(*big.Int)
+	assert.Equal(t, "-18446744073709551610", int128Value.String())
 	res.Close()
 }
 
