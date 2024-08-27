@@ -138,7 +138,15 @@ func kuzuRecursiveRelValueToGoValue(kuzuValue C.kuzu_value) (RecursiveRelationsh
 
 func kuzuListValueToGoValue(kuzuValue C.kuzu_value) ([]any, error) {
 	var listSize C.uint64_t
-	C.kuzu_value_get_list_size(&kuzuValue, &listSize)
+	cLogicalType := C.kuzu_logical_type{}
+	defer C.kuzu_data_type_destroy(&cLogicalType)
+	C.kuzu_value_get_data_type(&kuzuValue, &cLogicalType)
+	logicalTypeId := C.kuzu_data_type_get_id(&cLogicalType)
+	if logicalTypeId == C.KUZU_ARRAY {
+		C.kuzu_data_type_get_num_elements_in_array(&cLogicalType, &listSize)
+	} else {
+		C.kuzu_value_get_list_size(&kuzuValue, &listSize)
+	}
 	list := make([]any, 0, int(listSize))
 	var currentVal C.kuzu_value
 	var errors []error

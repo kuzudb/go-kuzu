@@ -305,3 +305,24 @@ func TestInterval(t *testing.T) {
 	value, _ := next.GetValue(0)
 	assert.Equal(t, time.Duration(3*24*time.Hour), value)
 }
+
+func TestList(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("RETURN [[1, 2, 3], [4, 5, 6]]")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, []interface{}{int64(1), int64(2), int64(3)}, value.([]interface{})[0])
+	assert.Equal(t, []interface{}{int64(4), int64(5), int64(6)}, value.([]interface{})[1])
+}
+
+func TestArray(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("RETURN CAST([3, 4, 12, 11], 'INT64[4]')")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, []interface{}{int64(3), int64(4), int64(12), int64(11)}, value)
+}
