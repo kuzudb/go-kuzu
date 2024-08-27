@@ -386,3 +386,20 @@ func TestNode(t *testing.T) {
 	assert.Equal(t, "Aida", usedNames[0])
 	res.Close()
 }
+
+func TestRelationship(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("MATCH (p:person)-[r:workAt]->(o:organisation) WHERE p.ID = 5 RETURN p, r, o")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	m, err := next.GetAsMap()
+	assert.Nil(t, err)
+	rel := m["r"].(Relationship)
+	src := m["p"].(Node)
+	dst := m["o"].(Node)
+	assert.Equal(t, "workAt", rel.Label)
+	assert.Equal(t, rel.SourceID, src.ID)
+	assert.Equal(t, rel.DestinationID, dst.ID)
+	assert.Equal(t, int64(2010), rel.Properties["year"])
+}
