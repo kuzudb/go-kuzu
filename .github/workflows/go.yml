@@ -30,4 +30,4 @@ jobs:
     
     - name: Run example
       working-directory: example
-      run: go run example.go
+      run: go run main.go
