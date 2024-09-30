@@ -18,9 +18,9 @@ type Connection struct {
 }
 
 // OpenConnection opens a connection to the specified database.
-func OpenConnection(database Database) (Connection, error) {
-	conn := Connection{}
-	runtime.SetFinalizer(&conn, func(conn *Connection) {
+func OpenConnection(database *Database) (*Connection, error) {
+	conn := &Connection{}
+	runtime.SetFinalizer(conn, func(conn *Connection) {
 		conn.Close()
 	})
 	status := C.kuzu_connection_init(&database.cDatabase, &conn.cConnection)
@@ -67,11 +67,11 @@ func (conn *Connection) SetTimeout(timeout uint64) {
 }
 
 // Query executes the specified query string and returns the result.
-func (conn *Connection) Query(query string) (QueryResult, error) {
+func (conn *Connection) Query(query string) (*QueryResult, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
-	queryResult := QueryResult{}
-	runtime.SetFinalizer(&queryResult, func(queryResult *QueryResult) {
+	queryResult := &QueryResult{}
+	runtime.SetFinalizer(queryResult, func(queryResult *QueryResult) {
 		queryResult.Close()
 	})
 	status := C.kuzu_connection_query(&conn.cConnection, cQuery, &queryResult.cQueryResult)
@@ -85,15 +85,15 @@ func (conn *Connection) Query(query string) (QueryResult, error) {
 
 // Execute executes the specified prepared statement with the specified arguments and returns the result.
 // The arguments are a map of parameter names to values.
-func (conn *Connection) Execute(preparedStatement PreparedStatement, args map[string]any) (QueryResult, error) {
+func (conn *Connection) Execute(preparedStatement *PreparedStatement, args map[string]any) (*QueryResult, error) {
+	queryResult := &QueryResult{}
 	for key, value := range args {
 		err := conn.bindParameter(preparedStatement, key, value)
 		if err != nil {
-			return QueryResult{}, err
+			return queryResult, err
 		}
 	}
-	queryResult := QueryResult{}
-	runtime.SetFinalizer(&queryResult, func(queryResult *QueryResult) {
+	runtime.SetFinalizer(queryResult, func(queryResult *QueryResult) {
 		queryResult.Close()
 	})
 	status := C.kuzu_connection_execute(&conn.cConnection, &preparedStatement.cPreparedStatement, &queryResult.cQueryResult)
@@ -106,7 +106,7 @@ func (conn *Connection) Execute(preparedStatement PreparedStatement, args map[st
 }
 
 // BindParameter binds a parameter to the prepared statement.
-func (conn *Connection) bindParameter(preparedStatement PreparedStatement, key string, value any) error {
+func (conn *Connection) bindParameter(preparedStatement *PreparedStatement, key string, value any) error {
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 	var status C.kuzu_state
@@ -167,11 +167,11 @@ func (conn *Connection) bindParameter(preparedStatement PreparedStatement, key s
 
 // Prepare returns a prepared statement for the specified query string.
 // The prepared statement can be used to execute the query with parameters.
-func (conn *Connection) Prepare(query string) (PreparedStatement, error) {
+func (conn *Connection) Prepare(query string) (*PreparedStatement, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
-	preparedStatement := PreparedStatement{}
-	runtime.SetFinalizer(&preparedStatement, func(preparedStatement *PreparedStatement) {
+	preparedStatement := &PreparedStatement{}
+	runtime.SetFinalizer(preparedStatement, func(preparedStatement *PreparedStatement) {
 		preparedStatement.Close()
 	})
 	status := C.kuzu_connection_prepare(&conn.cConnection, cQuery, &preparedStatement.cPreparedStatement)

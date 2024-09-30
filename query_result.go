@@ -81,9 +81,9 @@ func (queryResult *QueryResult) HasNext() bool {
 }
 
 // Next returns the next tuple in the result set.
-func (queryResult *QueryResult) Next() (FlatTuple, error) {
-	tuple := FlatTuple{}
-	runtime.SetFinalizer(&tuple, func(tuple *FlatTuple) {
+func (queryResult *QueryResult) Next() (*FlatTuple, error) {
+	tuple := &FlatTuple{}
+	runtime.SetFinalizer(tuple, func(tuple *FlatTuple) {
 		tuple.Close()
 	})
 	tuple.queryResult = queryResult
@@ -101,9 +101,9 @@ func (queryResult *QueryResult) HasNextQueryResult() bool {
 }
 
 // NextQueryResult returns the next query result when multiple query statements are executed.
-func (queryResult *QueryResult) NextQueryResult() (QueryResult, error) {
-	nextQueryResult := QueryResult{}
-	runtime.SetFinalizer(&nextQueryResult, func(nextQueryResult *QueryResult) {
+func (queryResult *QueryResult) NextQueryResult() (*QueryResult, error) {
+	nextQueryResult := &QueryResult{}
+	runtime.SetFinalizer(nextQueryResult, func(nextQueryResult *QueryResult) {
 		nextQueryResult.Close()
 	})
 	status := C.kuzu_query_result_get_next_query_result(&queryResult.cQueryResult, &nextQueryResult.cQueryResult)

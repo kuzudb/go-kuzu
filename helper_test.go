@@ -12,14 +12,14 @@ import (
 
 var (
 	once     sync.Once
-	testDb   Database
-	testConn Connection
+	testDb   *Database
+	testConn *Connection
 )
 
 var defaultNumThreads = uint64(4)
 var floatEpsilon = 0.0000001
 
-func initTinySNB(conn Connection) error {
+func initTinySNB(conn *Connection) error {
 	tinySnbPath, err := filepath.Abs(filepath.Join("dataset", "tinysnb"))
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func initTinySNB(conn Connection) error {
 	return nil
 }
 
-func initRDFVariant(conn Connection) error {
+func initRDFVariant(conn *Connection) error {
 	rdfVariantPath, err := filepath.Abs(filepath.Join("dataset", "rdf_variant"))
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func initRDFVariant(conn Connection) error {
 	return nil
 }
 
-func executeCypherFromFile(filePath string, conn Connection, originalString *string, replaceString *string) error {
+func executeCypherFromFile(filePath string, conn *Connection, originalString *string, replaceString *string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func executeCypherFromFile(filePath string, conn Connection, originalString *str
 	return nil
 }
 
-func SetupTestDatabase(t testing.TB) (Database, Connection) {
+func SetupTestDatabase(t testing.TB) (*Database, *Connection) {
 	t.Helper()
 	once.Do(func() {
 		tempDir := t.TempDir()
