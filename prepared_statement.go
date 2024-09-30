@@ -9,6 +9,7 @@ import "C"
 // PreparedStatement is returned by the `Prepare` method of Connection.
 type PreparedStatement struct {
 	cPreparedStatement C.kuzu_prepared_statement
+	connection         *Connection
 	isClosed           bool
 }
 

@@ -61,9 +61,9 @@ type Database struct {
 }
 
 // OpenDatabase opens a Kùzu database at the given path with the given system configuration.
-func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
-	db := Database{}
-	runtime.SetFinalizer(&db, func(db *Database) {
+func OpenDatabase(path string, systemConfig SystemConfig) (*Database, error) {
+	db := &Database{}
+	runtime.SetFinalizer(db, func(db *Database) {
 		db.Close()
 	})
 	cPath := C.CString(path)
@@ -77,7 +77,7 @@ func OpenDatabase(path string, systemConfig SystemConfig) (Database, error) {
 }
 
 // OpenInMemoryDatabase opens a Kùzu database in in-memory mode with the given system configuration.
-func OpenInMemoryDatabase(systemConfig SystemConfig) (Database, error) {
+func OpenInMemoryDatabase(systemConfig SystemConfig) (*Database, error) {
 	return OpenDatabase(":memory:", systemConfig)
 }
 
