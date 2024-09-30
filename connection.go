@@ -14,12 +14,14 @@ import (
 // Connection represents a connection to a Kùzu database.
 type Connection struct {
 	cConnection C.kuzu_connection
+	database    *Database
 	isClosed    bool
 }
 
 // OpenConnection opens a connection to the specified database.
 func OpenConnection(database *Database) (*Connection, error) {
 	conn := &Connection{}
+	conn.database = database
 	runtime.SetFinalizer(conn, func(conn *Connection) {
 		conn.Close()
 	})
@@ -71,6 +73,7 @@ func (conn *Connection) Query(query string) (*QueryResult, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
 	queryResult := &QueryResult{}
+	queryResult.connection = conn
 	runtime.SetFinalizer(queryResult, func(queryResult *QueryResult) {
 		queryResult.Close()
 	})
@@ -87,6 +90,7 @@ func (conn *Connection) Query(query string) (*QueryResult, error) {
 // The arguments are a map of parameter names to values.
 func (conn *Connection) Execute(preparedStatement *PreparedStatement, args map[string]any) (*QueryResult, error) {
 	queryResult := &QueryResult{}
+	queryResult.connection = conn
 	for key, value := range args {
 		err := conn.bindParameter(preparedStatement, key, value)
 		if err != nil {
@@ -171,6 +175,7 @@ func (conn *Connection) Prepare(query string) (*PreparedStatement, error) {
 	cQuery := C.CString(query)
 	defer C.free(unsafe.Pointer(cQuery))
 	preparedStatement := &PreparedStatement{}
+	preparedStatement.connection = conn
 	runtime.SetFinalizer(preparedStatement, func(preparedStatement *PreparedStatement) {
 		preparedStatement.Close()
 	})

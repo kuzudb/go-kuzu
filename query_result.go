@@ -15,6 +15,7 @@ import (
 // QueryResult is returned by the `Query` and `Execute` methods of Connection.
 type QueryResult struct {
 	cQueryResult C.kuzu_query_result
+	connection   *Connection
 	isClosed     bool
 	columnNames  []string
 }
