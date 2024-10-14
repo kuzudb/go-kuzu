@@ -47,26 +47,6 @@ func initTinySNB(conn *Connection) error {
 	return nil
 }
 
-func initRDFVariant(conn *Connection) error {
-	rdfVariantPath, err := filepath.Abs(filepath.Join("dataset", "rdf_variant"))
-	if err != nil {
-		return err
-	}
-	schemaPath := filepath.Join(rdfVariantPath, "schema.cypher")
-	err = executeCypherFromFile(schemaPath, conn, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	copyPath := filepath.Join(rdfVariantPath, "copy.cypher")
-	err = executeCypherFromFile(copyPath, conn, nil, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func executeCypherFromFile(filePath string, conn *Connection, originalString *string, replaceString *string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -114,10 +94,6 @@ func SetupTestDatabase(t testing.TB) (*Database, *Connection) {
 		err = initTinySNB(testConn)
 		if err != nil {
 			t.Fatalf("Error initializing TinySNB: %v", err)
-		}
-		err = initRDFVariant(testConn)
-		if err != nil {
-			t.Fatalf("Error initializing RDF Variant: %v", err)
 		}
 	})
 	return testDb, testConn
