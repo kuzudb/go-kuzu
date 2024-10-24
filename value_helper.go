@@ -208,6 +208,33 @@ func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 	return structure, nil
 }
 
+// kuzuMapValueToGoValue converts a kuzu_value representing a MAP to a
+// map of string to any in Go.
+func kuzuMapValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
+	structure := make(map[string]any)
+	var propertySize C.uint64_t
+	C.kuzu_value_get_map_num_fields(&kuzuValue, &propertySize)
+	var currentKey *C.char
+	var currentVal C.kuzu_value
+	var errors []error
+	for i := C.uint64_t(0); i < propertySize; i++ {
+		C.kuzu_value_get_map_field_name(&kuzuValue, i, &currentKey)
+		keyString := C.GoString(currentKey)
+		C.kuzu_destroy_string(currentKey)
+		C.kuzu_value_get_map_field_value(&kuzuValue, i, &currentVal)
+		value, err := kuzuValueToGoValue(currentVal)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		structure[keyString] = value
+		C.kuzu_value_destroy(&currentVal)
+	}
+	if len(errors) > 0 {
+		return structure, fmt.Errorf("failed to get values: %v", errors)
+	}
+	return structure, nil
+}
+
 // kuzuValueToGoValue converts a kuzu_value to a corresponding Go value.
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 	if C.kuzu_value_is_null(&kuzuValue) {
@@ -395,6 +422,8 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		return kuzuListValueToGoValue(kuzuValue)
 	case C.KUZU_STRUCT, C.KUZU_UNION:
 		return kuzuStructValueToGoValue(kuzuValue)
+	case C.KUZU_MAP:
+		return kuzuMapValueToGoValue(kuzuValue)
 	default:
 		valueString := C.kuzu_value_to_string(&kuzuValue)
 		defer C.kuzu_destroy_string(valueString)
