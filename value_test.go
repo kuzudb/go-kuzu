@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -357,10 +358,16 @@ func TestDecimal(t *testing.T) {
 	value, _ := next.GetValue(0)
 	size := len(value.([]interface{}))
 	assert.Equal(t, 4, size)
-	assert.Equal(t, "5.7", value.([]interface{})[0])
-	assert.Equal(t, "8.3", value.([]interface{})[1])
-	assert.Equal(t, "8.7", value.([]interface{})[2])
-	assert.Equal(t, "13.7", value.([]interface{})[3])
+
+	expected := decimal.NewFromFloat(5.7)
+	assert.Equal(t, expected, value.([]interface{})[0])
+	expected = decimal.NewFromFloat(8.3)
+	assert.Equal(t, expected, value.([]interface{})[1])
+	expected = decimal.NewFromFloat(8.7)
+	assert.Equal(t, expected, value.([]interface{})[2])
+	expected = decimal.NewFromFloat(13.7)
+	assert.Equal(t, expected, value.([]interface{})[3])
+	expected = decimal.NewFromFloat(8.7 * 13.7)
 }
 
 func TestUnion(t *testing.T) {

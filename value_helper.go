@@ -13,6 +13,7 @@ import (
 	"math/big"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 // InternalID represents the internal ID of a node or relationship in Kùzu.
@@ -430,8 +431,9 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		if status != C.KuzuSuccess {
 			return nil, fmt.Errorf("failed to get string value of decimal type with status: %d", status)
 		}
+		goDecimal, _ := decimal.NewFromString(C.GoString(outString))
 		defer C.kuzu_destroy_string(outString)
-		return C.GoString(outString), nil
+		return goDecimal, nil
 	default:
 		valueString := C.kuzu_value_to_string(&kuzuValue)
 		defer C.kuzu_destroy_string(valueString)
