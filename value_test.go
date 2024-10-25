@@ -348,6 +348,21 @@ func TestMap(t *testing.T) {
 	assert.InDelta(t, float64(33), value.(map[string]any)["audience1"], floatEpsilon)
 }
 
+func TestDecimal(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("UNWIND [1] AS A UNWIND [5.7, 8.3, 8.7, 13.7] AS B WITH cast(CAST(A AS DECIMAL) * CAST(B AS DECIMAL) AS DECIMAL(18, 1)) AS PROD RETURN COLLECT(PROD) AS RES")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	size := len(value.([]interface{}))
+	assert.Equal(t, 4, size)
+	assert.Equal(t, "5.7", value.([]interface{})[0])
+	assert.Equal(t, "8.3", value.([]interface{})[1])
+	assert.Equal(t, "8.7", value.([]interface{})[2])
+	assert.Equal(t, "13.7", value.([]interface{})[3])
+}
+
 func TestUnion(t *testing.T) {
 	_, conn := SetupTestDatabase(t)
 	res, error := conn.Query("MATCH (m:movies) WHERE m.length = 2544 RETURN m.grade;")

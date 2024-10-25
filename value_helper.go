@@ -424,6 +424,14 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		return kuzuStructValueToGoValue(kuzuValue)
 	case C.KUZU_MAP:
 		return kuzuMapValueToGoValue(kuzuValue)
+	case C.KUZU_DECIMAL:
+		var outString *C.char
+		status := C.kuzu_value_get_decimal_as_string(&kuzuValue, &outString)
+		if status != C.KuzuSuccess {
+			return nil, fmt.Errorf("failed to get string value of decimal type with status: %d", status)
+		}
+		defer C.kuzu_destroy_string(outString)
+		return C.GoString(outString), nil
 	default:
 		valueString := C.kuzu_value_to_string(&kuzuValue)
 		defer C.kuzu_destroy_string(valueString)
