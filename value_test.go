@@ -356,18 +356,14 @@ func TestDecimal(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	size := len(value.([]interface{}))
+	interfaceValues, _ := value.([]interface{})
+	size := len(interfaceValues)
 	assert.Equal(t, 4, size)
 
-	expected := decimal.NewFromFloat(5.7)
-	assert.Equal(t, expected, value.([]interface{})[0])
-	expected = decimal.NewFromFloat(8.3)
-	assert.Equal(t, expected, value.([]interface{})[1])
-	expected = decimal.NewFromFloat(8.7)
-	assert.Equal(t, expected, value.([]interface{})[2])
-	expected = decimal.NewFromFloat(13.7)
-	assert.Equal(t, expected, value.([]interface{})[3])
-	expected = decimal.NewFromFloat(8.7 * 13.7)
+	assert.Equal(t, decimal.NewFromFloat(5.7), interfaceValues[0])
+	assert.Equal(t, decimal.NewFromFloat(8.3), interfaceValues[1])
+	assert.Equal(t, decimal.NewFromFloat(8.7), interfaceValues[2])
+	assert.Equal(t, decimal.NewFromFloat(13.7), interfaceValues[3])
 }
 
 func TestUnion(t *testing.T) {

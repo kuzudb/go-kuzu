@@ -431,9 +431,13 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		if status != C.KuzuSuccess {
 			return nil, fmt.Errorf("failed to get string value of decimal type with status: %d", status)
 		}
-		goDecimal, _ := decimal.NewFromString(C.GoString(outString))
-		defer C.kuzu_destroy_string(outString)
-		return goDecimal, nil
+		goString := C.GoString(outString)
+		C.kuzu_destroy_string(outString)
+		goDecimal, casting_error := decimal.NewFromString(goString)
+		if casting_error != nil {
+			return nil, fmt.Errorf("failed to convert decimal value with error: %w", casting_error)
+		}
+		return goDecimal, casting_error
 	default:
 		valueString := C.kuzu_value_to_string(&kuzuValue)
 		defer C.kuzu_destroy_string(valueString)
