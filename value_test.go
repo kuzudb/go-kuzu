@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -346,6 +347,23 @@ func TestMap(t *testing.T) {
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
 	assert.InDelta(t, float64(33), value.(map[string]any)["audience1"], floatEpsilon)
+}
+
+func TestDecimal(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("UNWIND [1] AS A UNWIND [5.7, 8.3, 8.7, 13.7] AS B WITH cast(CAST(A AS DECIMAL) * CAST(B AS DECIMAL) AS DECIMAL(18, 1)) AS PROD RETURN COLLECT(PROD) AS RES")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	valueList, _ := value.([]interface{})
+	size := len(valueList)
+	assert.Equal(t, 4, size)
+
+	assert.Equal(t, decimal.NewFromFloat(5.7), valueList[0])
+	assert.Equal(t, decimal.NewFromFloat(8.3), valueList[1])
+	assert.Equal(t, decimal.NewFromFloat(8.7), valueList[2])
+	assert.Equal(t, decimal.NewFromFloat(13.7), valueList[3])
 }
 
 func TestUnion(t *testing.T) {
