@@ -211,30 +211,30 @@ func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 
 // kuzuMapValueToGoValue converts a kuzu_value representing a MAP to a
 // map of string to any in Go.
-func kuzuMapValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
-	structure := make(map[string]any)
-	var propertySize C.uint64_t
-	C.kuzu_value_get_map_num_fields(&kuzuValue, &propertySize)
-	var currentKey *C.char
-	var currentVal C.kuzu_value
-	var errors []error
-	for i := C.uint64_t(0); i < propertySize; i++ {
-		C.kuzu_value_get_map_field_name(&kuzuValue, i, &currentKey)
-		keyString := C.GoString(currentKey)
-		C.kuzu_destroy_string(currentKey)
-		C.kuzu_value_get_map_field_value(&kuzuValue, i, &currentVal)
-		value, err := kuzuValueToGoValue(currentVal)
-		if err != nil {
-			errors = append(errors, err)
-		}
-		structure[keyString] = value
-		C.kuzu_value_destroy(&currentVal)
-	}
-	if len(errors) > 0 {
-		return structure, fmt.Errorf("failed to get values: %v", errors)
-	}
-	return structure, nil
-}
+// func kuzuMapValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
+// 	structure := make(map[string]any)
+// 	var propertySize C.uint64_t
+// 	C.kuzu_value_get_map_num_fields(&kuzuValue, &propertySize)
+// 	var currentKey *C.char
+// 	var currentVal C.kuzu_value
+// 	var errors []error
+// 	for i := C.uint64_t(0); i < propertySize; i++ {
+// 		C.kuzu_value_get_map_field_name(&kuzuValue, i, &currentKey)
+// 		keyString := C.GoString(currentKey)
+// 		C.kuzu_destroy_string(currentKey)
+// 		C.kuzu_value_get_map_field_value(&kuzuValue, i, &currentVal)
+// 		value, err := kuzuValueToGoValue(currentVal)
+// 		if err != nil {
+// 			errors = append(errors, err)
+// 		}
+// 		structure[keyString] = value
+// 		C.kuzu_value_destroy(&currentVal)
+// 	}
+// 	if len(errors) > 0 {
+// 		return structure, fmt.Errorf("failed to get values: %v", errors)
+// 	}
+// 	return structure, nil
+// }
 
 // kuzuValueToGoValue converts a kuzu_value to a corresponding Go value.
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
@@ -423,8 +423,8 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		return kuzuListValueToGoValue(kuzuValue)
 	case C.KUZU_STRUCT, C.KUZU_UNION:
 		return kuzuStructValueToGoValue(kuzuValue)
-	case C.KUZU_MAP:
-		return kuzuMapValueToGoValue(kuzuValue)
+	// case C.KUZU_MAP:
+	// 	return kuzuMapValueToGoValue(kuzuValue)
 	case C.KUZU_DECIMAL:
 		var outString *C.char
 		status := C.kuzu_value_get_decimal_as_string(&kuzuValue, &outString)
@@ -445,6 +445,7 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 	}
 }
 
+// int128ToBigInt converts a kuzu_int128_t to a big.Int in Go.
 func int128ToBigInt(value C.kuzu_int128_t) (*big.Int, error) {
 	var outString *C.char
 	status := C.kuzu_int128_t_to_string(value, &outString)
@@ -459,4 +460,52 @@ func int128ToBigInt(value C.kuzu_int128_t) (*big.Int, error) {
 		return nil, fmt.Errorf("failed to convert string to big.Int")
 	}
 	return bigInt, nil
+}
+
+func goValueToKuzuValue(
+	value any,
+) (*C.kuzu_value, error) {
+	var kuzuValue *C.kuzu_value
+	switch v := value.(type) {
+	case bool:
+		kuzuValue = C.kuzu_value_create_bool(C.bool(v))
+	case int:
+		kuzuValue = C.kuzu_value_create_int64(C.int64_t(v))
+	case int64:
+		kuzuValue = C.kuzu_value_create_int64(C.int64_t(v))
+	case int32:
+		kuzuValue = C.kuzu_value_create_int32(C.int32_t(v))
+	case int16:
+		kuzuValue = C.kuzu_value_create_int16(C.int16_t(v))
+	case int8:
+		kuzuValue = C.kuzu_value_create_int8(C.int8_t(v))
+	case uint:
+		kuzuValue = C.kuzu_value_create_uint64(C.uint64_t(v))
+	case uint64:
+		kuzuValue = C.kuzu_value_create_uint64(C.uint64_t(v))
+	case uint32:
+		kuzuValue = C.kuzu_value_create_uint32(C.uint32_t(v))
+	case uint16:
+		kuzuValue = C.kuzu_value_create_uint16(C.uint16_t(v))
+	case uint8:
+		kuzuValue = C.kuzu_value_create_uint8(C.uint8_t(v))
+	case float64:
+		kuzuValue = C.kuzu_value_create_double(C.double(v))
+	case float32:
+		kuzuValue = C.kuzu_value_create_float(C.float(v))
+	case string:
+		kuzuValue = C.kuzu_value_create_string(C.CString(v))
+	case time.Time:
+		if timeHasNanoseconds(v) {
+			kuzuValue = C.kuzu_value_create_timestamp_ns(timeToKuzuTimestampNs(v))
+		} else {
+			kuzuValue = C.kuzu_value_create_timestamp(timeToKuzuTimestamp(v))
+		}
+	case time.Duration:
+		interval := durationToKuzuInterval(v)
+		kuzuValue = C.kuzu_value_create_interval(interval)
+	default:
+		return nil, fmt.Errorf("unsupported type")
+	}
+	return kuzuValue, nil
 }
