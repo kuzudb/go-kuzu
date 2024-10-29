@@ -339,15 +339,19 @@ func TestStruct(t *testing.T) {
 	assert.Equal(t, int64(30), value.(map[string]interface{})["age"])
 }
 
-// func TestMap(t *testing.T) {
-// 	_, conn := SetupTestDatabase(t)
-// 	res, error := conn.Query("MATCH (m:movies) WHERE m.length = 2544 RETURN m.audience")
-// 	assert.Nil(t, error)
-// 	assert.True(t, res.HasNext())
-// 	next, _ := res.Next()
-// 	value, _ := next.GetValue(0)
-// 	assert.InDelta(t, float64(33), value.(map[string]any)["audience1"], floatEpsilon)
-// }
+func TestMap(t *testing.T) {
+	_, conn := SetupTestDatabase(t)
+	res, error := conn.Query("MATCH (m:movies) WHERE m.length = 2544 RETURN m.audience")
+	assert.Nil(t, error)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	valueList := value.([]MapItem)
+	size := len(valueList)
+	assert.Equal(t, 1, size)
+	assert.Equal(t, "audience1", valueList[0].Key)
+	assert.InDelta(t, float64(33), valueList[0].Value, floatEpsilon)
+}
 
 func TestDecimal(t *testing.T) {
 	_, conn := SetupTestDatabase(t)

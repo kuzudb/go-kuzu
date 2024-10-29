@@ -47,6 +47,13 @@ type RecursiveRelationship struct {
 	Relationships []Relationship
 }
 
+// MapItem represents a key-value pair in a map in Kùzu. It is used for both
+// the query parameters and the query result.
+type MapItem struct {
+	Key   any
+	Value any
+}
+
 // kuzuNodeValueToGoValue converts a kuzu_value representing a node to a Node
 // struct in Go.
 func kuzuNodeValueToGoValue(kuzuValue C.kuzu_value) (Node, error) {
@@ -210,31 +217,34 @@ func kuzuStructValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
 }
 
 // kuzuMapValueToGoValue converts a kuzu_value representing a MAP to a
-// map of string to any in Go.
-// func kuzuMapValueToGoValue(kuzuValue C.kuzu_value) (map[string]any, error) {
-// 	structure := make(map[string]any)
-// 	var propertySize C.uint64_t
-// 	C.kuzu_value_get_map_num_fields(&kuzuValue, &propertySize)
-// 	var currentKey *C.char
-// 	var currentVal C.kuzu_value
-// 	var errors []error
-// 	for i := C.uint64_t(0); i < propertySize; i++ {
-// 		C.kuzu_value_get_map_field_name(&kuzuValue, i, &currentKey)
-// 		keyString := C.GoString(currentKey)
-// 		C.kuzu_destroy_string(currentKey)
-// 		C.kuzu_value_get_map_field_value(&kuzuValue, i, &currentVal)
-// 		value, err := kuzuValueToGoValue(currentVal)
-// 		if err != nil {
-// 			errors = append(errors, err)
-// 		}
-// 		structure[keyString] = value
-// 		C.kuzu_value_destroy(&currentVal)
-// 	}
-// 	if len(errors) > 0 {
-// 		return structure, fmt.Errorf("failed to get values: %v", errors)
-// 	}
-// 	return structure, nil
-// }
+// slice of MapItem in Go.
+func kuzuMapValueToGoValue(kuzuValue C.kuzu_value) ([]MapItem, error) {
+	var mapSize C.uint64_t
+	C.kuzu_value_get_map_size(&kuzuValue, &mapSize)
+	mapItems := make([]MapItem, 0, int(mapSize))
+	var currentKey C.kuzu_value
+	var currentValue C.kuzu_value
+	var errors []error
+	for i := C.uint64_t(0); i < mapSize; i++ {
+		C.kuzu_value_get_map_key(&kuzuValue, i, &currentKey)
+		C.kuzu_value_get_map_value(&kuzuValue, i, &currentValue)
+		key, err := kuzuValueToGoValue(currentKey)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		value, err := kuzuValueToGoValue(currentValue)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		C.kuzu_value_destroy(&currentKey)
+		C.kuzu_value_destroy(&currentValue)
+		mapItems = append(mapItems, MapItem{Key: key, Value: value})
+	}
+	if len(errors) > 0 {
+		return mapItems, fmt.Errorf("failed to get values: %v", errors)
+	}
+	return mapItems, nil
+}
 
 // kuzuValueToGoValue converts a kuzu_value to a corresponding Go value.
 func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
@@ -423,8 +433,8 @@ func kuzuValueToGoValue(kuzuValue C.kuzu_value) (any, error) {
 		return kuzuListValueToGoValue(kuzuValue)
 	case C.KUZU_STRUCT, C.KUZU_UNION:
 		return kuzuStructValueToGoValue(kuzuValue)
-	// case C.KUZU_MAP:
-	// 	return kuzuMapValueToGoValue(kuzuValue)
+	case C.KUZU_MAP:
+		return kuzuMapValueToGoValue(kuzuValue)
 	case C.KUZU_DECIMAL:
 		var outString *C.char
 		status := C.kuzu_value_get_decimal_as_string(&kuzuValue, &outString)
