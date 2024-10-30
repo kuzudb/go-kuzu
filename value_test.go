@@ -346,7 +346,11 @@ func TestMap(t *testing.T) {
 	assert.True(t, res.HasNext())
 	next, _ := res.Next()
 	value, _ := next.GetValue(0)
-	assert.InDelta(t, float64(33), value.(map[string]any)["audience1"], floatEpsilon)
+	valueList := value.([]MapItem)
+	size := len(valueList)
+	assert.Equal(t, 1, size)
+	assert.Equal(t, "audience1", valueList[0].Key)
+	assert.InDelta(t, float64(33), valueList[0].Value, floatEpsilon)
 }
 
 func TestDecimal(t *testing.T) {

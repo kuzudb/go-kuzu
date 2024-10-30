@@ -42,15 +42,16 @@ func TestSetMaxNumThreads(t *testing.T) {
 	conn.Close()
 }
 
+const largeQuery = "UNWIND RANGE(1,100000) AS x UNWIND RANGE(1, 100000) AS y RETURN COUNT(x + y);"
+
 func TestInterrupt(t *testing.T) {
-	query := "MATCH (a:person)-[k:knows*1..28]->(b:person) RETURN COUNT(*);"
 	db, _ := SetupTestDatabase(t)
 	conn, _ := OpenConnection(db)
 	var err error
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		_, err = conn.Query(query)
+		_, err = conn.Query(largeQuery)
 		wg.Done()
 	}()
 	time.Sleep(100 * time.Millisecond)
@@ -62,11 +63,10 @@ func TestInterrupt(t *testing.T) {
 }
 
 func TestSetTimeout(t *testing.T) {
-	query := "MATCH (a:person)-[k:knows*1..28]->(b:person) RETURN COUNT(*);"
 	db, _ := SetupTestDatabase(t)
 	conn, _ := OpenConnection(db)
 	conn.SetTimeout(100)
-	_, err := conn.Query(query)
+	_, err := conn.Query(largeQuery)
 	assert.NotNil(t, err)
 	assert.Equal(t, "Interrupted.", err.Error())
 	conn.Close()

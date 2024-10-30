@@ -953,6 +953,47 @@ KUZU_C_API kuzu_value* kuzu_value_create_interval(kuzu_interval_t val_);
  */
 KUZU_C_API kuzu_value* kuzu_value_create_string(const char* val_);
 /**
+ * @brief Creates a list value with the given number of elements and the given elements.
+ * The caller needs to make sure that all elements have the same type.
+ * The elements are copied into the list value, so destroying the elements after creating the list
+ * value is safe.
+ * Caller is responsible for destroying the returned value.
+ * @param num_elements The number of elements in the list.
+ * @param elements The elements of the list.
+ * @param[out] out_value The output parameter that will hold a pointer to the created list value.
+ * @return The state indicating the success or failure of the operation.
+ */
+KUZU_C_API kuzu_state kuzu_value_create_list(uint64_t num_elements, kuzu_value** elements,
+    kuzu_value** out_value);
+/**
+ * @brief Creates a struct value with the given number of fields and the given field names and
+ * values. The caller needs to make sure that all field names are unique.
+ * The field names and values are copied into the struct value, so destroying the field names and
+ * values after creating the struct value is safe.
+ * Caller is responsible for destroying the returned value.
+ * @param num_fields The number of fields in the struct.
+ * @param field_names The field names of the struct.
+ * @param field_values The field values of the struct.
+ * @param[out] out_value The output parameter that will hold a pointer to the created struct value.
+ * @return The state indicating the success or failure of the operation.
+ */
+KUZU_C_API kuzu_state kuzu_value_create_struct(uint64_t num_fields, const char** field_names,
+    kuzu_value** field_values, kuzu_value** out_value);
+/**
+ * @brief Creates a map value with the given number of fields and the given keys and values. The
+ * caller needs to make sure that all keys are unique, and all keys and values have the same type.
+ * The keys and values are copied into the map value, so destroying the keys and values after
+ * creating the map value is safe.
+ * Caller is responsible for destroying the returned value.
+ * @param num_fields The number of fields in the map.
+ * @param keys The keys of the map.
+ * @param values The values of the map.
+ * @param[out] out_value The output parameter that will hold a pointer to the created map value.
+ * @return The state indicating the success or failure of the operation.
+ */
+KUZU_C_API kuzu_state kuzu_value_create_map(uint64_t num_fields, kuzu_value** keys,
+    kuzu_value** values, kuzu_value** out_value);
+/**
  * @brief Creates a new value based on the given value. Caller is responsible for destroying the
  * returned value.
  * @param value The value to create from.
@@ -1015,22 +1056,22 @@ KUZU_C_API kuzu_state kuzu_value_get_struct_field_value(kuzu_value* value, uint6
     kuzu_value* out_value);
 
 /**
- * @brief Returns the number of fields of the given map value. The value must be of type MAP.
- * @param value The MAP value to get number of fields.
- * @param[out] out_result The output parameter that will hold the number of fields.
+ * @brief Returns the size of the given map value. The value must be of type MAP.
+ * @param value The MAP value to get size.
+ * @param[out] out_result The output parameter that will hold the size of the map.
  * @return The state indicating the success or failure of the operation.
  */
-KUZU_C_API kuzu_state kuzu_value_get_map_num_fields(kuzu_value* value, uint64_t* out_result);
+KUZU_C_API kuzu_state kuzu_value_get_map_size(kuzu_value* value, uint64_t* out_result);
 /**
- * @brief Returns the field name at index of the given map value. The value must be of physical
+ * @brief Returns the key at index of the given map value. The value must be of physical
  * type MAP.
- * @param value The MAP value to get field name.
+ * @param value The MAP value to get key.
  * @param index The index of the field name to return.
- * @param[out] out_result The output parameter that will hold the field name at index.
+ * @param[out] out_key The output parameter that will hold the key at index.
  * @return The state indicating the success or failure of the operation.
  */
-KUZU_C_API kuzu_state kuzu_value_get_map_field_name(kuzu_value* value, uint64_t index,
-    char** out_result);
+KUZU_C_API kuzu_state kuzu_value_get_map_key(kuzu_value* value, uint64_t index,
+    kuzu_value* out_key);
 /**
  * @brief Returns the field value at index of the given map value. The value must be of physical
  * type MAP.
@@ -1039,9 +1080,8 @@ KUZU_C_API kuzu_state kuzu_value_get_map_field_name(kuzu_value* value, uint64_t 
  * @param[out] out_value The output parameter that will hold the field value at index.
  * @return The state indicating the success or failure of the operation.
  */
-KUZU_C_API kuzu_state kuzu_value_get_map_field_value(kuzu_value* value, uint64_t index,
+KUZU_C_API kuzu_state kuzu_value_get_map_value(kuzu_value* value, uint64_t index,
     kuzu_value* out_value);
-
 /**
  * @brief Returns the list of nodes for recursive rel value. The value must be of type
  * RECURSIVE_REL.
