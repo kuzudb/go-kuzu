@@ -7,6 +7,7 @@ import "C"
 
 import (
 	"fmt"
+	"sort"
 	"time"
 	"unsafe"
 
@@ -472,9 +473,105 @@ func int128ToBigInt(value C.kuzu_int128_t) (*big.Int, error) {
 	return bigInt, nil
 }
 
-func goValueToKuzuValue(
-	value any,
-) (*C.kuzu_value, error) {
+// goMapToKuzuStruct converts a map of string to any to a kuzu_value representing
+// a STRUCT. It returns an error if the map is empty.
+func goMapToKuzuStruct(value map[string]any) (*C.kuzu_value, error) {
+	numFields := C.uint64_t(len(value))
+	if numFields == 0 {
+		return nil, fmt.Errorf("failed to create STRUCT value because the map is empty")
+	}
+	fieldNames := make([]*C.char, 0, len(value))
+	fieldValues := make([]*C.kuzu_value, 0, len(value))
+	// Sort the keys to ensure the order is consistent.
+	// This is useful for creating a LIST of STRUCTs because in Kùzu, all the
+	// LIST elements must have the same type (i.e., the same order of fields).
+	sortedKeys := make([]string, 0, len(value))
+	for k := range value {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+	for _, k := range sortedKeys {
+		fieldNames = append(fieldNames, C.CString(k))
+		kuzuValue, error := goValueToKuzuValue(value[k])
+		if error != nil {
+			return nil, fmt.Errorf("failed to convert value in the map with error: %w", error)
+		}
+		fieldValues = append(fieldValues, kuzuValue)
+		defer C.kuzu_value_destroy(kuzuValue)
+		defer C.free(unsafe.Pointer(C.CString(k)))
+	}
+
+	var kuzuValue *C.kuzu_value
+	status := C.kuzu_value_create_struct(numFields, &fieldNames[0], &fieldValues[0], &kuzuValue)
+	if status != C.KuzuSuccess {
+		return nil, fmt.Errorf("failed to create STRUCT value with status: %d", status)
+	}
+	return kuzuValue, nil
+}
+
+// goSliceOfMapItemsToKuzuMap converts a slice of MapItem to a kuzu_value
+// representing a MAP. It returns an error if the slice is empty or if the keys
+// in the slice are of different types or if the values in the slice are of
+// different types.
+func goSliceOfMapItemsToKuzuMap(slice []MapItem) (*C.kuzu_value, error) {
+	numItems := C.uint64_t(len(slice))
+	if numItems == 0 {
+		return nil, fmt.Errorf("failed to create MAP value because the slice is empty")
+	}
+	keys := make([]*C.kuzu_value, 0, len(slice))
+	values := make([]*C.kuzu_value, 0, len(slice))
+	for _, item := range slice {
+		key, error := goValueToKuzuValue(item.Key)
+		if error != nil {
+			return nil, fmt.Errorf("failed to convert key in the slice with error: %w", error)
+		}
+		keys = append(keys, key)
+		defer C.kuzu_value_destroy(key)
+		value, error := goValueToKuzuValue(item.Value)
+		if error != nil {
+			return nil, fmt.Errorf("failed to convert value in the slice with error: %w", error)
+		}
+		values = append(values, value)
+		defer C.kuzu_value_destroy(value)
+	}
+	var kuzuValue *C.kuzu_value
+	status := C.kuzu_value_create_map(numItems, &keys[0], &values[0], &kuzuValue)
+	if status != C.KuzuSuccess {
+		return nil, fmt.Errorf("failed to create MAP value with status: %d. please make sure all the keys are of the same type and all the values are of the same type", status)
+	}
+	return kuzuValue, nil
+}
+
+// goSliceToKuzuList converts a slice of any to a kuzu_value representing a LIST.
+// It returns an error if the slice is empty or if the values in the slice are of
+// different types.
+func goSliceToKuzuList(slice []any) (*C.kuzu_value, error) {
+	numItems := C.uint64_t(len(slice))
+	if numItems == 0 {
+		return nil, fmt.Errorf("failed to create LIST value because the slice is empty")
+	}
+	values := make([]*C.kuzu_value, 0, len(slice))
+	for _, item := range slice {
+		value, error := goValueToKuzuValue(item)
+		if error != nil {
+			return nil, fmt.Errorf("failed to convert value in the slice with error: %w", error)
+		}
+		values = append(values, value)
+		defer C.kuzu_value_destroy(value)
+	}
+	var kuzuValue *C.kuzu_value
+	status := C.kuzu_value_create_list(numItems, &values[0], &kuzuValue)
+	if status != C.KuzuSuccess {
+		return nil, fmt.Errorf("failed to create LIST value with status: %d. please make sure all the values are of the same type", status)
+	}
+	return kuzuValue, nil
+}
+
+// kuzuValueToGoValue converts a Go value to a kuzu_value.
+func goValueToKuzuValue(value any) (*C.kuzu_value, error) {
+	if value == nil {
+		return C.kuzu_value_create_null(), nil
+	}
 	var kuzuValue *C.kuzu_value
 	switch v := value.(type) {
 	case bool:
@@ -514,8 +611,14 @@ func goValueToKuzuValue(
 	case time.Duration:
 		interval := durationToKuzuInterval(v)
 		kuzuValue = C.kuzu_value_create_interval(interval)
+	case map[string]any:
+		return goMapToKuzuStruct(v)
+	case []MapItem:
+		return goSliceOfMapItemsToKuzuMap(v)
+	case []any:
+		return goSliceToKuzuList(v)
 	default:
-		return nil, fmt.Errorf("unsupported type")
+		return nil, fmt.Errorf("unsupported type: %T", v)
 	}
 	return kuzuValue, nil
 }

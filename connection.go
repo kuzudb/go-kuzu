@@ -114,17 +114,12 @@ func (conn *Connection) bindParameter(preparedStatement *PreparedStatement, key 
 	defer C.free(unsafe.Pointer(cKey))
 	var status C.kuzu_state
 	var cValue *C.kuzu_value
-	if value == nil {
-		cValue = C.kuzu_value_create_null()
-		defer C.kuzu_value_destroy(cValue)
-	} else {
-		var valueConversionError error
-		cValue, valueConversionError = goValueToKuzuValue(value)
-		if valueConversionError != nil {
-			return fmt.Errorf("failed to convert Go value to Kùzu value: %v", valueConversionError)
-		}
-		defer C.kuzu_value_destroy(cValue)
+	var valueConversionError error
+	cValue, valueConversionError = goValueToKuzuValue(value)
+	if valueConversionError != nil {
+		return fmt.Errorf("failed to convert Go value to Kùzu value: %v", valueConversionError)
 	}
+	defer C.kuzu_value_destroy(cValue)
 	status = C.kuzu_prepared_statement_bind_value(&preparedStatement.cPreparedStatement, cKey, cValue)
 	if status != C.KuzuSuccess {
 		return fmt.Errorf("failed to bind value with status %d", status)
