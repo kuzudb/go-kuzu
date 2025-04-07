@@ -31,3 +31,36 @@ jobs:
     - name: Run example
       working-directory: example
       run: go run main.go
+
+  build-and-test-windows:
+    name: Build and test (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      GOROOT: /ucrt64/lib/go
+      GOPATH: /ucrt64
+    steps:
+    - name: Set up MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          curl
+          git
+          mingw-w64-ucrt-x86_64-go
+          mingw-w64-ucrt-x86_64-gcc
+
+    - uses: actions/checkout@v4
+
+    - name: Set up path
+      run: |
+        export PATH="$(pwd)/lib/dynamic/windows:$PATH"
+        echo "PATH=$PATH" >> $GITHUB_ENV
+      
+    - name: Build
+      run: go build -v
+
+    - name: Test
+      run: go test -v
