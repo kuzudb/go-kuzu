@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestDriver(t *testing.T) {
 	ctx := nextContext()
 	dir := filepath.Join(os.TempDir(), "kuzu")
-	t.Log(dir)
+	// Normalize the path for Windows
+	dir = strings.ReplaceAll(dir, "\\", "/")
+	t.Log("Test directory: " + dir)
 	cc, err := sql.Open(Name, fmt.Sprintf("kuzu://%s", dir))
 	if nil != err {
 		t.Error(err)
@@ -39,7 +42,7 @@ func TestDriver(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		t.Log(r.RowsAffected())
+		t.Log("RowsAffected: " + fmt.Sprint(r.RowsAffected()))
 	}
 
 	doQuery := func(query string, args map[string]any) ([]map[string]string, error) {
@@ -88,6 +91,6 @@ func TestDriver(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		t.Log(rs)
+		t.Log("Rows:" + fmt.Sprint(rs))
 	}
 }
