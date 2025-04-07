@@ -22,6 +22,16 @@ cd example
 go run main.go
 ```
 
+## Docs
+The full documentation is available at [pkg.go.dev](https://pkg.go.dev/github.com/kuzudb/go-kuzu).
+
+## Tests
+To run the tests, you can use the following command:
+
+```bash
+go test -v
+```
+
 ## Windows Support
 For Cgo to properly work on Windows, MSYS2 with `UCRT64` environment is required. You can follow the instructions below to set it up:
 1. Install MSYS2 from [here](https://www.msys2.org/).
@@ -36,16 +46,6 @@ For Cgo to properly work on Windows, MSYS2 with `UCRT64` environment is required
    This is required to run the test cases and examples. If you are deploying your application, you can also copy the `kuzu_shared.dll` file to the same directory as your executable or to a directory that is already in your `PATH`.
 
 For an example of how to properly set up the environment, you can also refer to our CI configuration file [here](.github/workflows/go.yml).
-
-## Docs
-The full documentation is available at [pkg.go.dev](https://pkg.go.dev/github.com/kuzudb/go-kuzu).
-
-## Tests
-To run the tests, you can use the following command:
-
-```bash
-go test -v
-```
 
 ## Contributing
 We welcome contributions to go-kuzu. By contributing to go-kuzu, you agree that your contributions will be licensed under the [MIT License](LICENSE). Please read the [contributing guide](CONTRIBUTING.md) for more information.
