@@ -41,6 +41,8 @@ func initTinySNB(conn *Connection) error {
 
 	conn.Query("create node table moviesSerial (ID SERIAL, name STRING, length INT32, note STRING, PRIMARY KEY (ID));")
 	moviesSerialPath := filepath.Join(tinySnbPath, "vMoviesSerial.csv")
+	// Normalize the path for Windows
+	moviesSerialPath = strings.ReplaceAll(moviesSerialPath, "\\", "/")
 	moviesSerialCopyQuery := fmt.Sprintf("copy moviesSerial from \"%s\"", moviesSerialPath)
 	_, err = conn.Query(moviesSerialCopyQuery)
 	if err != nil {

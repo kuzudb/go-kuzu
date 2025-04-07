@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestDriver(t *testing.T) {
 	ctx := nextContext()
 	dir := filepath.Join(os.TempDir(), "kuzu")
+	// Normalize the path for Windows
+	strings.ReplaceAll(dir, "\\", "/")
 	t.Log(dir)
 	cc, err := sql.Open(Name, fmt.Sprintf("kuzu://%s", dir))
 	if nil != err {
