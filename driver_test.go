@@ -62,7 +62,7 @@ func TestDriver(t *testing.T) {
 		var datum []map[string]string
 		for rows.Next() {
 			set := make([]any, len(cols))
-			for idx, _ := range set {
+			for idx := range set {
 				set[idx] = new(sql.NullString)
 			}
 			if err = rows.Scan(set...); nil != err {

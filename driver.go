@@ -321,7 +321,7 @@ func (that *rowSet) Next(dest []driver.Value) error {
 	if nil != err {
 		return err
 	}
-	for idx, _ := range dest {
+	for idx := range dest {
 		if len(values) <= idx {
 			break
 		}
