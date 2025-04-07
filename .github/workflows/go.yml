@@ -54,17 +54,17 @@ jobs:
           mingw-w64-ucrt-x86_64-gcc
 
     - uses: actions/checkout@v4
-
-    - name: Set up path
-      run: |
-        export PATH="$(pwd)/lib/dynamic/windows:$PATH"
-        echo "PATH=$PATH" >> $GITHUB_ENV
       
     - name: Build
       run: go build -v
 
     - name: Test
       run: |
-        ls /d/a/go-kuzu/go-kuzu/lib/dynamic/windows
-        env
+        export PATH="$(pwd)/lib/dynamic/windows:$PATH"
         go test -v
+
+    - name: Run example
+      run: |
+        export PATH="$(pwd)/lib/dynamic/windows:$PATH"
+        cd example
+        go run main.go
