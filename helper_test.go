@@ -62,6 +62,8 @@ func executeCypherFromFile(filePath string, conn *Connection, originalString *st
 		}
 		if originalString != nil && replaceString != nil {
 			line = strings.ReplaceAll(line, *originalString, *replaceString)
+			// Normalize the path for Windows
+			line = strings.ReplaceAll(line, "\\", "/")
 		}
 		_, err := conn.Query(line)
 		if err != nil {

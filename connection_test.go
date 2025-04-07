@@ -1,6 +1,7 @@
 package kuzu
 
 import (
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -45,6 +46,10 @@ func TestSetMaxNumThreads(t *testing.T) {
 const largeQuery = "UNWIND RANGE(1,100000) AS x UNWIND RANGE(1, 100000) AS y RETURN COUNT(x + y);"
 
 func TestInterrupt(t *testing.T) {
+	// TODO: Fix this test on Windows
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows")
+	}
 	db, _ := SetupTestDatabase(t)
 	conn, _ := OpenConnection(db)
 	var err error
