@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kuzudb/go-kuzu)](https://goreportcard.com/report/github.com/kuzudb/go-kuzu)
 [![License](https://img.shields.io/github/license/kuzudb/go-kuzu)](LICENSE)
 
-Official Go language binding for [Kùzu](https://github.com/kuzudb/kuzu). Kùzu an embeddable property graph database management system built for query speed and scalability. For more information, please visit the [Kùzu GitHub repository](https://github.com/kuzudb/kuzu) or the [Kùzu website](https://kuzudb.com).
+Official Go language binding for [Kuzu](https://github.com/kuzudb/kuzu). Kuzu an embeddable property graph database management system built for query speed and scalability. For more information, please visit the [Kuzu GitHub repository](https://github.com/kuzudb/kuzu) or the [Kuzu website](https://kuzudb.com).
 
 ## Installation
 

@@ -4,7 +4,7 @@ package kuzu
 // #include <stdlib.h>
 import "C"
 
-// PreparedStatement represents a prepared statement in Kùzu, which can be
+// PreparedStatement represents a prepared statement in Kuzu, which can be
 // used to execute a query with parameters.
 // PreparedStatement is returned by the `Prepare` method of Connection.
 type PreparedStatement struct {

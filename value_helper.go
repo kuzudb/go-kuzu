@@ -17,13 +17,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// InternalID represents the internal ID of a node or relationship in Kùzu.
+// InternalID represents the internal ID of a node or relationship in Kuzu.
 type InternalID struct {
 	TableID uint64
 	Offset  uint64
 }
 
-// Node represents a node retrieved from Kùzu.
+// Node represents a node retrieved from Kuzu.
 // A node has an ID, a label, and properties.
 type Node struct {
 	ID         InternalID
@@ -31,7 +31,7 @@ type Node struct {
 	Properties map[string]any
 }
 
-// Relationship represents a relationship retrieved from Kùzu.
+// Relationship represents a relationship retrieved from Kuzu.
 // A relationship has a source ID, a destination ID, a label, and properties.
 type Relationship struct {
 	SourceID      InternalID
@@ -41,14 +41,14 @@ type Relationship struct {
 }
 
 // RecursiveRelationship represents a recursive relationship retrieved from a
-// path query in Kùzu. A recursive relationship has a list of nodes and a list
+// path query in Kuzu. A recursive relationship has a list of nodes and a list
 // of relationships.
 type RecursiveRelationship struct {
 	Nodes         []Node
 	Relationships []Relationship
 }
 
-// MapItem represents a key-value pair in a map in Kùzu. It is used for both
+// MapItem represents a key-value pair in a map in Kuzu. It is used for both
 // the query parameters and the query result.
 type MapItem struct {
 	Key   any
@@ -483,7 +483,7 @@ func goMapToKuzuStruct(value map[string]any) (*C.kuzu_value, error) {
 	fieldNames := make([]*C.char, 0, len(value))
 	fieldValues := make([]*C.kuzu_value, 0, len(value))
 	// Sort the keys to ensure the order is consistent.
-	// This is useful for creating a LIST of STRUCTs because in Kùzu, all the
+	// This is useful for creating a LIST of STRUCTs because in Kuzu, all the
 	// LIST elements must have the same type (i.e., the same order of fields).
 	sortedKeys := make([]string, 0, len(value))
 	for k := range value {
