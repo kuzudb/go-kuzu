@@ -1,5 +1,5 @@
-// Package kuzu provides a Go interface to Kùzu graph database management system.
-// The package is a wrapper around the C API of Kùzu.
+// Package kuzu provides a Go interface to Kuzu graph database management system.
+// The package is a wrapper around the C API of Kuzu.
 package kuzu
 
 // #include "kuzu.h"
@@ -11,7 +11,7 @@ import (
 	"unsafe"
 )
 
-// SystemConfig represents the configuration of Kùzu database system.
+// SystemConfig represents the configuration of Kuzu database system.
 // BufferPoolSize is the size of the buffer pool in bytes.
 // MaxNumThreads is the maximum number of threads that can be used by the database system.
 // EnableCompression is a boolean flag to enable or disable compression.
@@ -54,13 +54,13 @@ func (config SystemConfig) toC() C.kuzu_system_config {
 	return cSystemConfig
 }
 
-// Database represents a Kùzu database instance.
+// Database represents a Kuzu database instance.
 type Database struct {
 	cDatabase C.kuzu_database
 	isClosed  bool
 }
 
-// OpenDatabase opens a Kùzu database at the given path with the given system configuration.
+// OpenDatabase opens a Kuzu database at the given path with the given system configuration.
 func OpenDatabase(path string, systemConfig SystemConfig) (*Database, error) {
 	db := &Database{}
 	runtime.SetFinalizer(db, func(db *Database) {
@@ -76,7 +76,7 @@ func OpenDatabase(path string, systemConfig SystemConfig) (*Database, error) {
 	return db, nil
 }
 
-// OpenInMemoryDatabase opens a Kùzu database in in-memory mode with the given system configuration.
+// OpenInMemoryDatabase opens a Kuzu database in in-memory mode with the given system configuration.
 func OpenInMemoryDatabase(systemConfig SystemConfig) (*Database, error) {
 	return OpenDatabase(":memory:", systemConfig)
 }

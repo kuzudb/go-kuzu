@@ -10,7 +10,7 @@ import (
 	"unsafe"
 )
 
-// Connection represents a connection to a Kùzu database.
+// Connection represents a connection to a Kuzu database.
 type Connection struct {
 	cConnection C.kuzu_connection
 	database    *Database
@@ -117,7 +117,7 @@ func (conn *Connection) bindParameter(preparedStatement *PreparedStatement, key 
 	var valueConversionError error
 	cValue, valueConversionError = goValueToKuzuValue(value)
 	if valueConversionError != nil {
-		return fmt.Errorf("failed to convert Go value to Kùzu value: %v", valueConversionError)
+		return fmt.Errorf("failed to convert Go value to Kuzu value: %v", valueConversionError)
 	}
 	defer C.kuzu_value_destroy(cValue)
 	status = C.kuzu_prepared_statement_bind_value(&preparedStatement.cPreparedStatement, cKey, cValue)
