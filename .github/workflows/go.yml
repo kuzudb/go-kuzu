@@ -66,4 +66,5 @@ jobs:
     - name: Test
       run: |
         ls /d/a/go-kuzu/go-kuzu/lib/dynamic/windows
+        env
         go test -v
