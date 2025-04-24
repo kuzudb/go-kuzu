@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/kuzudb/go-kuzu"
 )
 
 func main() {
-	dbPath := "example_db"
-	os.RemoveAll(dbPath)
+	// Use an in-memory database for demonstration.
+	dbPath := ":memory:"
 
 	// Open a database with default system configuration.
 	systemConfig := kuzu.DefaultSystemConfig()
