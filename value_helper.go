@@ -7,6 +7,7 @@ import "C"
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 	"unsafe"
@@ -618,6 +619,14 @@ func goValueToKuzuValue(value any) (*C.kuzu_value, error) {
 	case []any:
 		return goSliceToKuzuList(v)
 	default:
+		if reflect.TypeOf(value).Kind() == reflect.Slice {
+			sliceValue := reflect.ValueOf(value)
+			slice := make([]any, sliceValue.Len())
+			for i := 0; i < sliceValue.Len(); i++ {
+				slice[i] = sliceValue.Index(i).Interface()
+			}
+			return goSliceToKuzuList(slice)
+		}
 		return nil, fmt.Errorf("unsupported type: %T", v)
 	}
 	return kuzuValue, nil

@@ -268,3 +268,57 @@ func TestSliceWithMixedTypesParam(t *testing.T) {
 	expected := "failed to create LIST value with status: 1"
 	assert.Contains(t, err.Error(), expected)
 }
+
+func TestInt64SliceParam(t *testing.T) {
+	goSlice := []int64{1, 2, 3}
+	expected := []any{int64(1), int64(2), int64(3)}
+	_, conn := SetupTestDatabase(t)
+	preparedStatement, err := conn.Prepare("RETURN $1")
+	assert.Nil(t, err)
+	res, err := conn.Execute(preparedStatement, map[string]any{"1": goSlice})
+	assert.Nil(t, err)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, expected, value)
+	assert.False(t, res.HasNext())
+	res.Close()
+}
+
+func TestStringSliceParam(t *testing.T) {
+	goSlice := []string{"One", "Two", "Three"}
+	expected := []any{"One", "Two", "Three"}
+	_, conn := SetupTestDatabase(t)
+	preparedStatement, err := conn.Prepare("RETURN $1")
+	assert.Nil(t, err)
+	res, err := conn.Execute(preparedStatement, map[string]any{"1": goSlice})
+	defer res.Close()
+	assert.Nil(t, err)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, expected, value)
+	assert.False(t, res.HasNext())
+}
+
+func TestNestedInt64SliceParam(t *testing.T) {
+	goSlice := [][]uint8{
+		{0, 1, 2, 3},
+		{4, 5, 6, 7},
+	}
+	expected := []any{
+		[]any{uint8(0), uint8(1), uint8(2), uint8(3)},
+		[]any{uint8(4), uint8(5), uint8(6), uint8(7)},
+	}
+	_, conn := SetupTestDatabase(t)
+	preparedStatement, err := conn.Prepare("RETURN $1")
+	assert.Nil(t, err)
+	res, err := conn.Execute(preparedStatement, map[string]any{"1": goSlice})
+	defer res.Close()
+	assert.Nil(t, err)
+	assert.True(t, res.HasNext())
+	next, _ := res.Next()
+	value, _ := next.GetValue(0)
+	assert.Equal(t, expected, value)
+	assert.False(t, res.HasNext())
+}
