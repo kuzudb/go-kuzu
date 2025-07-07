@@ -4,24 +4,23 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
 
 func TestDriver(t *testing.T) {
 	ctx := nextContext()
-	dir := filepath.Join(os.TempDir(), "kuzu")
+	dbPath := getDatabasePath(t)
 	// Normalize the path for Windows
-	dir = strings.ReplaceAll(dir, "\\", "/")
-	t.Log("Test directory: " + dir)
-	cc, err := sql.Open(Name, fmt.Sprintf("kuzu://%s", dir))
+	dbPath = strings.ReplaceAll(dbPath, "\\", "/")
+	t.Log("Test database path: " + dbPath)
+	cc, err := sql.Open(Name, fmt.Sprintf("kuzu://%s", dbPath))
 	if nil != err {
 		t.Error(err)
 		return
 	}
 	defer func() {
-		if err = os.RemoveAll(dir); nil != err {
+		if err = os.RemoveAll(dbPath); nil != err {
 			t.Error(err)
 		}
 	}()
