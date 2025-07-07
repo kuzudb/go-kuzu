@@ -1,13 +1,24 @@
 package kuzu
 
 import (
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func getDatabasePath(t *testing.T) string {
+	t.Helper()
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "testdb")
+	// Normalize the path for Windows
+	dbPath = strings.ReplaceAll(dbPath, "\\", "/")
+	return dbPath
+}
+
 func TestOpenDatabaseWithDefaultConfig(t *testing.T) {
-	db, err := OpenDatabase(t.TempDir(), DefaultSystemConfig())
+	db, err := OpenDatabase(getDatabasePath(t), DefaultSystemConfig())
 	assert.Nil(t, err)
 	assert.NotNil(t, db)
 	assert.NotNil(t, db.cDatabase)
@@ -19,7 +30,7 @@ func TestOpenDatabaseWithCustomConfig(t *testing.T) {
 	systemConfig := DefaultSystemConfig()
 	systemConfig.BufferPoolSize = 256 * 1024 * 1024 // 256 MB
 	systemConfig.MaxNumThreads = 4
-	db, err := OpenDatabase(t.TempDir(), systemConfig)
+	db, err := OpenDatabase(getDatabasePath(t), systemConfig)
 	assert.Nil(t, err)
 	assert.NotNil(t, db)
 	assert.NotNil(t, db.cDatabase)
@@ -69,7 +80,7 @@ func TestOpenDatabaseInMemory(t *testing.T) {
 func TestCloseDatabase(t *testing.T) {
 	systemConfig := DefaultSystemConfig()
 	systemConfig.BufferPoolSize = 256 * 1024
-	db, err := OpenDatabase(t.TempDir(), systemConfig)
+	db, err := OpenDatabase(getDatabasePath(t), systemConfig)
 	assert.Nil(t, err)
 	db.Close()
 	assert.True(t, db.isClosed)

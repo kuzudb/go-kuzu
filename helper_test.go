@@ -83,11 +83,14 @@ func SetupTestDatabase(t testing.TB) (*Database, *Connection) {
 	t.Helper()
 	once.Do(func() {
 		tempDir := t.TempDir()
+		dbPath := filepath.Join(tempDir, "testdb")
+		// Normalize the path for Windows
+		dbPath = strings.ReplaceAll(dbPath, "\\", "/")
 		systemConfig := DefaultSystemConfig()
 		systemConfig.BufferPoolSize = 256 * 1024 * 1024 // 256 MB
 		systemConfig.MaxNumThreads = defaultNumThreads
 		var err error
-		testDb, err = OpenDatabase(tempDir, systemConfig)
+		testDb, err = OpenDatabase(dbPath, systemConfig)
 		if err != nil {
 			t.Fatalf("Error opening database: %v", err)
 		}
