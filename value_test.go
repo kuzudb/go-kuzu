@@ -431,6 +431,7 @@ func TestRelationship(t *testing.T) {
 	src := m["p"].(Node)
 	dst := m["o"].(Node)
 	assert.Equal(t, "workAt", rel.Label)
+	assert.Equal(t, InternalID{TableID: 7, Offset: 1}, rel.ID)
 	assert.Equal(t, rel.SourceID, src.ID)
 	assert.Equal(t, rel.DestinationID, dst.ID)
 	assert.Equal(t, int64(2010), rel.Properties["year"])
