@@ -35,6 +35,7 @@ type Node struct {
 // Relationship represents a relationship retrieved from Kuzu.
 // A relationship has a source ID, a destination ID, a label, and properties.
 type Relationship struct {
+	ID            InternalID
 	SourceID      InternalID
 	DestinationID InternalID
 	Label         string
@@ -100,6 +101,10 @@ func kuzuRelValueToGoValue(kuzuValue C.kuzu_value) (Relationship, error) {
 	relation := Relationship{}
 	relation.Properties = make(map[string]any)
 	idValue := C.kuzu_value{}
+	C.kuzu_rel_val_get_id_val(&kuzuValue, &idValue)
+	id, _ := kuzuValueToGoValue(idValue)
+	relation.ID = id.(InternalID)
+	C.kuzu_value_destroy(&idValue)
 	C.kuzu_rel_val_get_src_id_val(&kuzuValue, &idValue)
 	src, _ := kuzuValueToGoValue(idValue)
 	relation.SourceID = src.(InternalID)
